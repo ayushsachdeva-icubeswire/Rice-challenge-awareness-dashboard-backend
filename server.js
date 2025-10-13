@@ -35,9 +35,58 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to unified application." });
 });
 
+//doc routes and design
+const swaggerJSDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Daawat",
+      version: "1.0.0",
+    },
+    servers: [
+      {
+        url: "http://192.168.1.148:" + process.env.PORT,
+      },
+      // {
+      //   url: "https://api.spiritualbharat.com",
+      // },
+      {
+        url: "http://3.7.79.213:" + process.env.PORT,
+      },
+      {
+        url: "http://192.168.1.148:" + process.env.PORT,
+      },
+    ],
+    components: {
+      securitySchemes: {
+        jwt: {
+          type: "http",
+          scheme: "bearer",
+          in: "header",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        jwt: [],
+      },
+    ],
+  },
+  apis: ["./app/routes/*.js"],
+};
+
+const swaggerSpac = swaggerJSDoc(options);
+app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerSpac));
+
 // routes
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
+require("./app/routes/challengers")(app);
+
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 const BASE_URL = `http://localhost:${PORT}`;
