@@ -45,8 +45,9 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Daawat",
+      title: "Rice Challenge Awareness Dashboard API",
       version: "1.0.0",
+      description: "API for Rice Challenge Awareness Dashboard including diet plans, stories, challengers, and user management",
     },
     servers: [
       {
