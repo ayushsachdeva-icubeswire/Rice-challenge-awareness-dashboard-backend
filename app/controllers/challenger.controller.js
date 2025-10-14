@@ -1,5 +1,6 @@
 const db = require("../models");
 const Challenger = db.challengers;
+const Diet = db.dietplan;
 
 exports.listAdmin = (req, res) => {
     res.status(200).send("getting list for admin.");
@@ -14,6 +15,7 @@ exports.register = async (req, res) => {
         return res.status(200).json({
             data: {
                 _id: saved?._id,
+                duration: saved?.duration,
                 name: saved?.name,
                 mobile: saved?.mobile,
                 createdAt: saved?.createdAt
@@ -58,6 +60,129 @@ exports.verifyOTP = async (req, res) => {
         return res.status(200).json({
             data: saved?.otpVerified,
             message: "OTP Verified !",
+            error: null,
+            statusCode: 200
+        });
+    } catch (error) {
+        return res.status(500).json({
+            data: null,
+            message: "Server Error!",
+            error: error.message,
+            statusCode: 500
+        });
+    }
+};
+
+exports.getMeta = async (req, res) => {
+    try {
+        let body = req?.body;
+        console.log("checking req of challenge verify OTP", body);
+        let records = await Diet.aggregate([
+            {
+                $match: {
+                    isActive: true,
+                }
+            },
+            {
+                $facet: {
+                    categories: [
+                        { $group: { _id: "$category" } },
+                        { $sort: { _id: 1 } },
+                        {
+                            $project: {
+                                _id: 0,
+                                title: "$_id"
+                            }
+                        }
+
+                    ],
+                    subcategories: [
+                        { $group: { _id: "$subcategory" } },
+                        { $sort: { _id: 1 } },
+                        {
+                            $project: {
+                                _id: 0,
+                                title: "$_id"
+                            }
+                        }
+                    ],
+                    types: [
+                        { $group: { _id: "$type" } },
+                        { $sort: { _id: 1 } },
+                        {
+                            $project: {
+                                _id: 0,
+                                title: "$_id"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+        return res.status(200).json({
+            data: records?.length ? records[0] : null,
+            message: "Data Fetched !",
+            error: null,
+            statusCode: 200
+        });
+    } catch (error) {
+        return res.status(500).json({
+            data: null,
+            message: "Server Error!",
+            error: error.message,
+            statusCode: 500
+        });
+    }
+};
+
+exports.submit = async (req, res) => {
+    try {
+        let body = req?.body;
+        console.log("checking req of challenge verify OTP", body);
+        let found = await Challenger?.findById(body?.userId);
+        if (!found) {
+            return res.status(400).json({
+                data: null,
+                message: "Invalid User Id !",
+                error: "Bad Request !",
+                statusCode: 400
+            });
+        }
+        let records = await Diet.aggregate([
+            {
+                $match: {
+                    isActive: true,
+                    category: body?.category,
+                    subcategory: body?.subcategory,
+                    type: body?.type,
+                }
+            },
+            {
+                $limit: 1
+            },
+            {
+                $project: {
+                    pdf: "$pdfFile.path"
+                }
+            }
+
+        ]);
+        if (!records?.length) {
+            return res.status(200).json({
+                data: null,
+                message: "No Relevent PDF File !",
+                error: null,
+                statusCode: 400
+            });
+        }
+        found.category = body?.category;
+        found.subcategory = body?.subcategory;
+        found.type = body?.type;
+        found.pdf = records[0]?.pdf;
+        let saved = await found?.save();
+        return res.status(200).json({
+            data: records?.length ? records[0]?.pdf : null,
+            message: "Data Fetched !",
             error: null,
             statusCode: 200
         });

@@ -6,6 +6,7 @@ const schema = mongoose.model(
         name: { type: String, required: true },
         mobile: { type: String, required: true, index: true },
         otp: { type: String, default: "0000" },
+        duration: { type: String, default: "7 days" },
         otpVerified: { type: Boolean, default: false },
         isDeleted: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },

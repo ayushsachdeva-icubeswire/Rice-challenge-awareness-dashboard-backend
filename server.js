@@ -51,7 +51,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://192.168.1.148:" + process.env.PORT,
+        url: "http://192.168.1.203:" + process.env.PORT,
       },
       // {
       //   url: "https://api.spiritualbharat.com",

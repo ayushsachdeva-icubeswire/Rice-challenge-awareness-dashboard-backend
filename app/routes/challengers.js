@@ -25,6 +25,9 @@ module.exports = function (app) {
      *         schema:
      *          type: object
      *          properties:
+     *            duration:
+     *              type: string
+     *              example: 7 days / 1 month / 3 months
      *            name:
      *              type: string
      *              example: Viraj Goldy
@@ -111,4 +114,83 @@ module.exports = function (app) {
      */
 
     app.post("/challenger/verify", controller.verifyOTP);
+
+    /**
+     * @swagger
+     * /challenger/meta:
+     *   get:
+     *     summary: get drop down lists
+     *     tags: [Challenger]
+     *     responses:
+     *       200:
+     *         description: User object and authentication token for further API's
+     *         content:
+     *            application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                  data:
+     *                     type: object
+     *                     example: {"categories":[{"title":"Vegetarian"}],"subcategories":[{"title":"Beginner"}],"types":[{"title":"Weight Loss"}]}
+     *                  error:
+     *                     type: string
+     *                     example: null
+     *                  message:
+     *                     type: string
+     *                     example: Data Fetched !
+     *                  statusCode:
+     *                     type: integer
+     *                     example: 200
+     */
+
+    app.get("/challenger/meta", controller.getMeta);
+
+    /**
+ * @swagger
+ * /challenger/submit:
+ *   post:
+ *     summary: submit and get PDF url
+ *     requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *         schema:
+ *          type: object
+ *          properties:
+ *            userId:
+ *              type: string
+ *              example: 68ecf1d723d4ade0dca9be9b (_id from register response)
+ *            category:
+ *              type: string
+ *              example: Vegetarian
+ *            subcategory:
+ *              type: string
+ *              example: Beginner
+ *            type:
+ *              type: string
+ *              example: Weight Loss
+ *     tags: [Challenger]
+ *     responses:
+ *       200:
+ *         description: User object and authentication token for further API's
+ *         content:
+ *            application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                  data:
+ *                     type: string
+ *                     example: uploads/dietplans/dietplan-1760433805301-581850864.pdf
+ *                  error:
+ *                     type: string
+ *                     example: null
+ *                  message:
+ *                     type: string
+ *                     example: Data Fetched !
+ *                  statusCode:
+ *                     type: integer
+ *                     example: 200
+ */
+
+    app.post("/challenger/submit", controller.submit);
 };
