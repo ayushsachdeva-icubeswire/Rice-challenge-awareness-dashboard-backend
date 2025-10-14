@@ -248,3 +248,40 @@ exports.delete = (req, res) => {
       });
     });
 };
+
+// Dashboard statistics
+exports.dashboard = async (req, res) => {
+  try {
+    const totalStories = await Story.countDocuments();
+    const totalViews = await Story.aggregate([
+      { $group: { _id: null, total: { $sum: "$views" } } }
+    ]);
+    const totalLikes = await Story.aggregate([
+      { $group: { _id: null, total: { $sum: "$likes" } } }
+    ]);
+
+    const apiResponse = await axios.get(
+      "https://apis.icubeswire.co/api/v1/campaign-analytics/graph-data",
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        params: {
+          "hashtags[0]": "itchotels"
+        }
+      }
+    );
+    const externalData = await apiResponse.data;
+    res.send({
+      totalStories,
+      totalViews: totalViews[0]?.total || 0,
+      totalLikes: totalLikes[0]?.total || 0,
+      postGraphData : externalData[0] || []
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: err.message || "Some error occurred while retrieving dashboard data."
+    });
+  }
+};

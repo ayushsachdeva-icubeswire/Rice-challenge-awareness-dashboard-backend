@@ -36,4 +36,7 @@ module.exports = function(app) {
     [authJwt.verifyToken],
     controller.delete
   );
+
+  //dashboard api
+  app.get("/api/dashboard",[authJwt.verifyToken], controller.dashboard);
 };
