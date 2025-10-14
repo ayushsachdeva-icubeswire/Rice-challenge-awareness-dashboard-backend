@@ -45,7 +45,8 @@ require("./app/routes/story.routes")(app);
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 const BASE_URL = `http://localhost:${PORT}`;
-app.listen(PORT, () => {
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Base URL: ${BASE_URL}`);
   console.log(`API endpoint: ${BASE_URL}/api`);
