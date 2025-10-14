@@ -18,10 +18,10 @@ module.exports = function(app) {
   );
 
   // Retrieve all Stories
-  app.get("/api/stories", controller.findAll);
+  app.get("/api/stories",[authJwt.verifyToken], controller.findAll);
 
   // Retrieve a single Story with id
-  app.get("/api/stories/:id", controller.findOne);
+  app.get("/api/stories/:id", [authJwt.verifyToken],controller.findOne);
 
   // Update a Story with id
   app.put(

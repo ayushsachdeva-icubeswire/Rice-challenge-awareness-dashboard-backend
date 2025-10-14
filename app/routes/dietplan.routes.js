@@ -19,10 +19,10 @@ module.exports = function(app) {
   );
 
   // Retrieve all Diet Plans (Public access)
-  app.get("/api/dietplans", controller.findAll);
+  app.get("/api/dietplans", [authJwt.verifyToken], controller.findAll);
 
   // Retrieve a single Diet Plan with id (Public access)
-  app.get("/api/dietplans/:id", controller.findOne);
+  app.get("/api/dietplans/:id", [authJwt.verifyToken], controller.findOne);
 
   // Update a Diet Plan with id (Admin/Moderator only)
   app.put(
