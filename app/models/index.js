@@ -9,6 +9,7 @@ db.mongoose = mongoose;
 db.user = require("./user.model");
 db.role = require("./role.model");
 db.dietplan = require("./dietplan.model");
+db.story = require("./story.model");
 
 db.ROLES = ["user", "admin", "moderator"];
 

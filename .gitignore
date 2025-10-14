@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+uploads/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -87,3 +88,5 @@ Thumbs.db
 # Logs
 logs
 *.log
+# Ignore npm lock file
+package-lock.json

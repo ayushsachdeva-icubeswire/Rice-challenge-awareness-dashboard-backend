@@ -11,6 +11,8 @@ app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 
 const db = require("./app/models");
@@ -39,6 +41,7 @@ app.get("/", (req, res) => {
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
 require("./app/routes/dietplan.routes")(app);
+require("./app/routes/story.routes")(app);
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 const BASE_URL = `http://localhost:${PORT}`;

@@ -2,26 +2,40 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create uploads directory if it doesn't exist
-const uploadDir = 'uploads/dietplans';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Create uploads directories if they don't exist
+const dietplansDir = 'uploads/dietplans';
+const storiesDir = 'uploads/stories';
 
-// Configure storage
-const storage = multer.diskStorage({
+[dietplansDir, storiesDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Configure storage for diet plans (PDFs)
+const dietplanStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    cb(null, dietplansDir);
   },
   filename: function (req, file, cb) {
-    // Create unique filename with timestamp and random string
     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'dietplan-' + uniqueName + path.extname(file.originalname));
   }
 });
 
-// File filter - only allow PDF files
-const fileFilter = (req, file, cb) => {
+// Configure storage for stories (Images)
+const storyStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, storiesDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'story-' + uniqueName + path.extname(file.originalname));
+  }
+});
+
+// File filter for PDFs
+const pdfFilter = (req, file, cb) => {
   if (file.mimetype === 'application/pdf') {
     cb(null, true);
   } else {
@@ -29,24 +43,45 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+// File filter for Images
+const imageFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
+// Configure multer for diet plans (PDFs)
+const uploadPdfConfig = multer({
+  storage: dietplanStorage,
+  fileFilter: pdfFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   }
 });
 
-// Middleware function for single PDF upload
-const uploadPDF = upload.single('pdfFile');
+// Configure multer for stories (Images)
+const uploadImageConfig = multer({
+  storage: storyStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for images
+  }
+});
+
+// Create middleware functions
+const uploadPDF = uploadPdfConfig.single('pdfFile');
+const upload = uploadImageConfig.single('image');
 
 // Error handling middleware
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
-        message: 'File too large. Maximum size allowed is 10MB.'
+        message: req.file && req.file.fieldname === 'image' 
+          ? 'File too large. Maximum size allowed is 5MB.'
+          : 'File too large. Maximum size allowed is 10MB.'
       });
     }
     return res.status(400).json({
@@ -62,5 +97,6 @@ const handleUploadError = (err, req, res, next) => {
 
 module.exports = {
   uploadPDF,
+  upload,
   handleUploadError
 };
