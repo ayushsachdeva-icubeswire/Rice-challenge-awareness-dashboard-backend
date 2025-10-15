@@ -10,7 +10,7 @@ module.exports = function (app) {
         next();
     });
 
-    app.post("/challenger/admin", controller.listAdmin);
+    app.get("/api/challenger", controller.listAdmin);
 
     // new user registeration
     /**

@@ -2,8 +2,41 @@ const db = require("../models");
 const Challenger = db.challengers;
 const Diet = db.dietplan;
 
-exports.listAdmin = (req, res) => {
-    res.status(200).send("getting list for admin.");
+exports.listAdmin = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        console.log("checking req", req?.query)
+        // Build filter object
+        let filter = { isDeleted: false };
+        if (req?.query?.search)
+            filter = {
+                ...filter,
+                $or: [
+                    { name: { $regex: req?.query?.search, $options: "i" } },
+                    { mobile: { $regex: req?.query?.search, $options: "i" } }
+                ]
+            }
+        if (req.query.duration) filter.duration = req.query.duration;
+        const records = await Challenger.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await Challenger.countDocuments(filter);
+        res.send({
+            data: records,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalItems: total
+        });
+    } catch (err) {
+        console.error("problem in challenger list for admin", err)
+        res.status(500).send({
+            message: err.message || "Some error occurred while retrieving diet plans."
+        });
+    }
 };
 
 exports.register = async (req, res) => {
