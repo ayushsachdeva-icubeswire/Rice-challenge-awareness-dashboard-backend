@@ -1,5 +1,6 @@
 const db = require("../models");
 const Story = db.story;
+const Challenge = db.challengers;
 const axios = require('axios');
 require('dotenv').config();
 
@@ -252,13 +253,95 @@ exports.delete = (req, res) => {
 // Dashboard statistics
 exports.dashboard = async (req, res) => {
   try {
-    const totalStories = await Story.countDocuments();
-    const totalViews = await Story.aggregate([
-      { $group: { _id: null, total: { $sum: "$views" } } }
-    ]);
-    const totalLikes = await Story.aggregate([
-      { $group: { _id: null, total: { $sum: "$likes" } } }
-    ]);
+    const data = await Challenge.aggregate([
+  {
+    $match: {
+      createdAt: { $exists: true },
+      isDeleted: false
+    }
+  },
+  {
+    $addFields: {
+      // Convert createdAt to day-level granularity
+      date: {
+        $dateTrunc: {
+          date: "$createdAt",
+          unit: "day" // change to "month" if you want monthly chart
+        }
+      },
+      // Derive status from isActive
+      status: {
+        $cond: {
+          if: { $eq: ["$isActive", true] },
+          then: "In Progress",
+          else: "Completed"
+        }
+      }
+    }
+  },
+  {
+    $group: {
+      _id: { date: "$date", status: "$status" },
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $group: {
+      _id: "$_id.date",
+      counts: {
+        $push: {
+          status: "$_id.status",
+          count: "$count"
+        }
+      }
+    }
+  },
+  {
+    $sort: { "_id": 1 }
+  },
+  {
+    $project: {
+      date: "$_id",
+      _id: 0,
+      Completed: {
+        $ifNull: [
+          {
+            $first: {
+              $filter: {
+                input: "$counts",
+                as: "c",
+                cond: { $eq: ["$$c.status", "Completed"] }
+              }
+            }
+          },
+          { count: 0 }
+        ]
+      },
+      InProgress: {
+        $ifNull: [
+          {
+            $first: {
+              $filter: {
+                input: "$counts",
+                as: "c",
+                cond: { $eq: ["$$c.status", "In Progress"] }
+              }
+            }
+          },
+          { count: 0 }
+        ]
+      }
+    }
+  },
+  {
+    $project: {
+      date: 1,
+      Completed: "$Completed.count",
+      InProgress: "$InProgress.count"
+    }
+  }
+]);
+
 
     const apiResponse = await axios.get(
       "https://apis.icubeswire.co/api/v1/campaign-analytics/graph-data",
@@ -274,9 +357,7 @@ exports.dashboard = async (req, res) => {
     );
     const externalData = await apiResponse.data;
     res.send({
-      totalStories,
-      totalViews: totalViews[0]?.total || 0,
-      totalLikes: totalLikes[0]?.total || 0,
+        challengrsGraphData : data,
       postGraphData : externalData[0] || []
     });
   } catch (err) {
