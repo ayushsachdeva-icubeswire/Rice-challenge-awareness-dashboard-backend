@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create uploads directories if they don't exist
+// Create uploads directories if they don't exist (for backward compatibility)
 const dietplansDir = 'uploads/dietplans';
 const storiesDir = 'uploads/stories';
 
@@ -12,18 +12,10 @@ const storiesDir = 'uploads/stories';
   }
 });
 
-// Configure storage for diet plans (PDFs)
-const dietplanStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, dietplansDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'dietplan-' + uniqueName + path.extname(file.originalname));
-  }
-});
+// Configure memory storage for S3 uploads (diet plans)
+const dietplanStorage = multer.memoryStorage();
 
-// Configure storage for stories (Images)
+// Configure storage for stories (Images) - keeping disk storage for now
 const storyStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, storiesDir);

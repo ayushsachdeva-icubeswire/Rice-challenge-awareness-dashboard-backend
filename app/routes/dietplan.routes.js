@@ -644,4 +644,46 @@ module.exports = function(app) {
     [authJwt.verifyToken],
     controller.downloadPDF
   );
+
+  /**
+   * @swagger
+   * /api/dietplans/{id}/view:
+   *   get:
+   *     summary: View diet plan PDF inline
+   *     tags: [Diet Plans]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: Diet plan id
+   *     responses:
+   *       200:
+   *         description: PDF file content for inline viewing
+   *         content:
+   *           application/pdf:
+   *             schema:
+   *               type: string
+   *               format: binary
+   *       404:
+   *         description: Diet plan or PDF file not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   */
+  app.get(
+    "/api/dietplans/:id/view",
+    [authJwt.verifyToken],
+    controller.viewPDF
+  );
 };

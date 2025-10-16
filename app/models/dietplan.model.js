@@ -39,7 +39,15 @@ const DietPlan = mongoose.model(
       },
       path: {
         type: String,
-        required: true
+        required: false // Made optional for backward compatibility
+      },
+      s3Url: {
+        type: String,
+        required: false // S3 URL for the uploaded file
+      },
+      s3Key: {
+        type: String,
+        required: false // S3 key for file operations
       },
       size: {
         type: Number,
@@ -48,6 +56,11 @@ const DietPlan = mongoose.model(
       uploadDate: {
         type: Date,
         default: Date.now
+      },
+      storageType: {
+        type: String,
+        enum: ['local', 's3'],
+        default: 's3' // Default to S3 storage
       }
     },
     description: {
