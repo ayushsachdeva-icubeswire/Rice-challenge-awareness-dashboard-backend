@@ -11,6 +11,7 @@ db.role = require("./role.model");
 db.dietplan = require("./dietplan.model");
 db.story = require("./story.model");
 db.challengers = require("./challengers");
+db.challengerProgress = require("./challengeProgress.model");
 
 db.ROLES = ["user", "admin", "moderator", "challengers"];
 
