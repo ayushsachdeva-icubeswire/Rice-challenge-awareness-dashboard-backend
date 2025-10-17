@@ -6,8 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Uploaded files
-uploads/dietplans/*.pdf
-uploads/dietplans/*.PDF
+# uploads/dietplans/*.pdf
+# uploads/dietplans/*.PDF
 
 # Runtime data
 pids
