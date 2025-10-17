@@ -24,7 +24,7 @@ module.exports = function (app) {
    *          properties:
    *            duration:
    *              type: string
-   *              example: 7 days / 1 month / 3 months
+   *              example: 7 days / 14 days / 21 days / 30 days
    *            name:
    *              type: string
    *              example: Viraj Goldy
@@ -162,10 +162,7 @@ module.exports = function (app) {
    *              example: Vegetarian
    *            subcategory:
    *              type: string
-   *              example: Beginner
-   *            type:
-   *              type: string
-   *              example: Weight Loss
+   *              example: Weight Loss Meal Plan
    *     tags: [Challenger]
    *     responses:
    *       200:
