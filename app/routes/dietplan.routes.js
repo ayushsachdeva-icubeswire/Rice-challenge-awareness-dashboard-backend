@@ -11,7 +11,6 @@ const controller = require("../controllers/dietplan.controller");
  *       required:
  *         - name
  *         - duration
- *         - type
  *         - category
  *         - pdfFile
  *         - createdBy
@@ -28,10 +27,6 @@ const controller = require("../controllers/dietplan.controller");
  *           type: string
  *           description: Duration of the diet plan
  *           example: "30 days"
- *         type:
- *           type: string
- *           description: Type of diet plan
- *           example: "Weight Loss"
  *         category:
  *           type: string
  *           description: Category of diet plan
@@ -85,7 +80,6 @@ const controller = require("../controllers/dietplan.controller");
  *       required:
  *         - name
  *         - duration
- *         - type
  *         - category
  *       properties:
  *         name:
@@ -96,10 +90,6 @@ const controller = require("../controllers/dietplan.controller");
  *           type: string
  *           description: Duration of the diet plan
  *           example: "30 days"
- *         type:
- *           type: string
- *           description: Type of diet plan
- *           example: "Weight Loss"
  *         category:
  *           type: string
  *           description: Category of diet plan
@@ -184,7 +174,6 @@ module.exports = function(app) {
    *             required:
    *               - name
    *               - duration
-   *               - type
    *               - category
    *               - file
    *             properties:
@@ -196,10 +185,6 @@ module.exports = function(app) {
    *                 type: string
    *                 description: Duration of the diet plan
    *                 example: "30 days"
-   *               type:
-   *                 type: string
-   *                 description: Type of diet plan
-   *                 example: "Weight Loss"
    *               category:
    *                 type: string
    *                 description: Category of diet plan
@@ -280,12 +265,6 @@ module.exports = function(app) {
    *           type: integer
    *           default: 10
    *         description: Number of items per page
-   *       - in: query
-   *         name: type
-   *         schema:
-   *           type: string
-   *         description: Filter by diet plan type
-   *         example: "Weight Loss"
    *       - in: query
    *         name: category
    *         schema:
@@ -406,10 +385,6 @@ module.exports = function(app) {
    *                 type: string
    *                 description: Duration of the diet plan
    *                 example: "45 days"
-   *               type:
-   *                 type: string
-   *                 description: Type of diet plan
-   *                 example: "Weight Loss"
    *               category:
    *                 type: string
    *                 description: Category of diet plan

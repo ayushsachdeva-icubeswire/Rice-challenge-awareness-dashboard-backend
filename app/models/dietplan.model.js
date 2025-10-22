@@ -13,11 +13,6 @@ const DietPlan = mongoose.model(
       required: true,
       trim: true // e.g., "7 days", "1 month", "3 months"
     },
-    type: {
-      type: String,
-      required: true,
-      trim: true // e.g., "Weight Loss", "Weight Gain", "Maintenance", "Muscle Building"
-    },
     category: {
       type: String,
       required: true,

@@ -8,9 +8,9 @@ const { uploadToS3, deleteFromS3, extractKeyFromUrl, getFileStreamFromS3, getFil
 exports.create = async (req, res) => {
   try {
     // Validate request
-    if (!req.body.name || !req.body.duration || !req.body.type || !req.body.category) {
+    if (!req.body.name || !req.body.duration || !req.body.category) {
       return res.status(400).send({
-        message: "Name, duration, type, and category are required!"
+        message: "Name, duration, and category are required!"
       });
     }
 
@@ -32,7 +32,6 @@ exports.create = async (req, res) => {
     const dietPlan = new DietPlan({
       name: req.body.name,
       duration: req.body.duration,
-      type: req.body.type,
       category: req.body.category,
       subcategory: req.body.subcategory || "",
       description: req.body.description || "",
@@ -81,7 +80,6 @@ exports.findAll = async (req, res) => {
     
     // Build filter object
     const filter = {};
-    if (req.query.type) filter.type = req.query.type;
     if (req.query.category) filter.category = req.query.category;
     if (req.query.subcategory) filter.subcategory = req.query.subcategory;
     if (req.query.isActive !== undefined) filter.isActive = req.query.isActive === 'true';
@@ -146,7 +144,6 @@ exports.update = async (req, res) => {
     const updateData = {
       name: req.body.name,
       duration: req.body.duration,
-      type: req.body.type,
       category: req.body.category,
       subcategory: req.body.subcategory,
       description: req.body.description,
