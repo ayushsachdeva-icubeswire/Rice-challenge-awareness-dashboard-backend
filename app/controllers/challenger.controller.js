@@ -100,14 +100,6 @@ exports.verifyOTP = async (req, res) => {
         }
         found.otpVerified = true;
         let saved = await found?.save();
-        let image = "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/bronze.jpeg";
-        if (found?.duration == "14 days")
-            image = "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/silver.jpeg";
-        else if (found?.duration == "21 days")
-            image = "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/gold.jpeg";
-        else if (found?.duration == "30 days")
-            image = "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/platinum.jpeg";
-        let whatsappResp = await sendBedge(found?.mobile, image, found?.name, found?.duration);
         return res.status(200).json({
             data: saved?.otpVerified,
             message: "OTP Verified !",
@@ -415,47 +407,7 @@ async function sendOTP(mobile, otp) {
                     ],
                     "buttonValues": {
                         "0": [
-                            otp.toString()async function sendBedge(mobile, image, name, duration) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // Example: simulate sending WhatsApp message via API
-            const payload = {
-                "countryCode": "+91",
-                "phoneNumber": mobile,
-                "type": "Template",
-                "template": {
-                    "name": "challenge_badge",
-                    "languageCode": "en",
-                    "headerValues": [
-                        image
-                    ],
-                    "bodyValues": [
-                        name,
-                        duration
-                    ]
-                }
-            };
-            // Example using axios
-            const response = await axios.post("https://api.interakt.ai/v1/public/message/", payload, {
-                headers: {
-                    Authorization: 'Basic VHY2aVQ2bFMyWGFtSFR5ZC14bS1HN1IzVVp1d28zVlZFOVoyV2hXdUJlWTo=',
-                    "Content-Type": "application/json",
-                },
-            });
-            console.log("response from whatsapp api", response);
-            if (response.data.result) {
-                console.log("✅ WhatsApp message sent successfully");
-                resolve(response.data); // return API response
-            } else {
-                console.log("❌ Failed to send WhatsApp message");
-                reject(new Error("Failed to send WhatsApp message"));
-            }
-        } catch (error) {
-            console.error("Error in sendBedge:", error.message);
-            reject(error); // reject promise on failure
-        }
-    });
-}
+                            otp.toString()
                         ]
                     }
                 }
@@ -480,48 +432,6 @@ async function sendOTP(mobile, otp) {
         }
     });
 }
-
-// async function sendBedge(mobile, image, name, duration) {
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             // Example: simulate sending WhatsApp message via API
-//             const payload = {
-//                 "countryCode": "+91",
-//                 "phoneNumber": mobile,
-//                 "type": "Template",
-//                 "template": {
-//                     "name": "challenge_badge",
-//                     "languageCode": "en",
-//                     "headerValues": [
-//                         image
-//                     ],
-//                     "bodyValues": [
-//                         name,
-//                         duration
-//                     ]
-//                 }
-//             };
-//             // Example using axios
-//             const response = await axios.post("https://api.interakt.ai/v1/public/message/", payload, {
-//                 headers: {
-//                     Authorization: 'Basic VHY2aVQ2bFMyWGFtSFR5ZC14bS1HN1IzVVp1d28zVlZFOVoyV2hXdUJlWTo=',
-//                     "Content-Type": "application/json",
-//                 },
-//             });
-//             console.log("response from whatsapp api", response);
-//             if (response.data.result) {
-//                 console.log("✅ WhatsApp message sent successfully");
-//                 resolve(response.data); // return API response
-//             } else {
-//                 console.log("❌ Failed to send WhatsApp message");
-//                 reject(new Error("Failed to send WhatsApp message"));
-//             }
-//         } catch (error) {
-//             console.error("Error in sendOTP:", error.message);
-//             reject(error); // reject promise on failure
-//         }
-//     });
-// }
 
 async function sendPlan(mobile, name, pdf, filename, duration) {
     return new Promise(async (resolve, reject) => {
