@@ -190,5 +190,5 @@ module.exports = function (app) {
 
   app.post("/challenger/update-engagement", controller.updateEngagement);
 
-  app.get("/challenger/progress", controller.getEngagement);
+  app.get("/api/challenger/progress", controller.getEngagement);
 };
