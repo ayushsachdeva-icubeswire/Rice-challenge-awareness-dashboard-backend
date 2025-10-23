@@ -66,7 +66,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/challenger/register", controller.register);
+  app.post("/api/challenger/register", controller.register);
 
   // Verify OTP
   /**
@@ -110,7 +110,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/challenger/verify", controller.verifyOTP);
+  app.post("/api/challenger/verify", controller.verifyOTP);
 
   /**
    * @swagger
@@ -186,7 +186,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/challenger/submit", controller.submit);
+  app.post("/api/challenger/submit", controller.submit);
 
   app.post("/challenger/update-engagement", controller.updateEngagement);
 
