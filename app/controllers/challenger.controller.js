@@ -21,6 +21,7 @@ exports.listAdmin = async (req, res) => {
                 ],
             };
         if (req.query.duration) filter.duration = req.query.duration;
+        if (req.query.category) filter.category = req.query.category;
         const records = await Challenger.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)

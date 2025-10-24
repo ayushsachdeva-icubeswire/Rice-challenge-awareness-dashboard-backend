@@ -14,28 +14,19 @@ exports.create = async (req, res) => {
       });
     }
 
-    if (!req.file) {
-      return res.status(400).send({
-        message: "PDF file is required!"
-      });
-    }
+    let pdfFileData = null;
 
-    // Upload file to S3
-    const s3UploadResult = await uploadToS3(
-      req.file.buffer,
-      req.file.originalname,
-      req.file.mimetype,
-      s3Config.folders.dietplans
-    );
+    // Handle PDF file upload if provided
+    if (req.file) {
+      // Upload file to S3
+      const s3UploadResult = await uploadToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        s3Config.folders.dietplans
+      );
 
-    // Create a Diet Plan
-    const dietPlan = new DietPlan({
-      name: req.body.name,
-      duration: req.body.duration,
-      category: req.body.category,
-      subcategory: req.body.subcategory || "",
-      description: req.body.description || "",
-      pdfFile: {
+      pdfFileData = {
         filename: path.basename(s3UploadResult.key),
         originalName: req.file.originalname,
         s3Url: s3UploadResult.url,
@@ -43,10 +34,26 @@ exports.create = async (req, res) => {
         size: req.file.size,
         storageType: 's3',
         uploadDate: new Date()
-      },
+      };
+    }
+
+    // Create a Diet Plan
+    const dietPlanData = {
+      name: req.body.name,
+      duration: req.body.duration,
+      category: req.body.category,
+      subcategory: req.body.subcategory || "",
+      description: req.body.description || "",
       createdBy: req.userId, // From JWT middleware
       isActive: req.body.isActive !== undefined ? req.body.isActive : true
-    });
+    };
+
+    // Add pdfFile data only if file was uploaded
+    if (pdfFileData) {
+      dietPlanData.pdfFile = pdfFileData;
+    }
+
+    const dietPlan = new DietPlan(dietPlanData);
 
     // Save Diet Plan in the database
     const savedDietPlan = await dietPlan.save();
@@ -165,13 +172,13 @@ exports.update = async (req, res) => {
       );
 
       // Delete old file from S3 if it exists
-      if (oldDietPlan && oldDietPlan.pdfFile.s3Key) {
+      if (oldDietPlan && oldDietPlan.pdfFile && oldDietPlan.pdfFile.s3Key) {
         try {
           await deleteFromS3(oldDietPlan.pdfFile.s3Key);
         } catch (deleteErr) {
           console.log('Error deleting old S3 file:', deleteErr);
         }
-      } else if (oldDietPlan && oldDietPlan.pdfFile.path) {
+      } else if (oldDietPlan && oldDietPlan.pdfFile && oldDietPlan.pdfFile.path) {
         // Delete old local file if it exists (backward compatibility)
         try {
           fs.unlinkSync(oldDietPlan.pdfFile.path);
@@ -227,13 +234,13 @@ exports.delete = async (req, res) => {
     }
 
     // Delete the file from S3 or local storage
-    if (dietPlan.pdfFile.s3Key) {
+    if (dietPlan.pdfFile && dietPlan.pdfFile.s3Key) {
       try {
         await deleteFromS3(dietPlan.pdfFile.s3Key);
       } catch (deleteErr) {
         console.log('Error deleting S3 file:', deleteErr);
       }
-    } else if (dietPlan.pdfFile.path) {
+    } else if (dietPlan.pdfFile && dietPlan.pdfFile.path) {
       // Delete local file (backward compatibility)
       try {
         fs.unlinkSync(dietPlan.pdfFile.path);
@@ -262,13 +269,13 @@ exports.deleteAll = async (req, res) => {
     
     // Delete all files from S3 and local storage
     const deletePromises = dietPlans.map(async (dietPlan) => {
-      if (dietPlan.pdfFile.s3Key) {
+      if (dietPlan.pdfFile && dietPlan.pdfFile.s3Key) {
         try {
           await deleteFromS3(dietPlan.pdfFile.s3Key);
         } catch (deleteErr) {
           console.log('Error deleting S3 file:', deleteErr);
         }
-      } else if (dietPlan.pdfFile.path) {
+      } else if (dietPlan.pdfFile && dietPlan.pdfFile.path) {
         // Delete local file (backward compatibility)
         try {
           fs.unlinkSync(dietPlan.pdfFile.path);
@@ -303,6 +310,13 @@ exports.downloadPDF = async (req, res) => {
     if (!dietPlan) {
       return res.status(404).send({
         message: "Diet Plan not found with id " + id
+      });
+    }
+
+    // Check if diet plan has a PDF file
+    if (!dietPlan.pdfFile) {
+      return res.status(404).send({
+        message: "No PDF file associated with this diet plan"
       });
     }
 
@@ -393,6 +407,13 @@ exports.viewPDF = async (req, res) => {
     if (!dietPlan) {
       return res.status(404).send({
         message: "Diet Plan not found with id " + id
+      });
+    }
+
+    // Check if diet plan has a PDF file
+    if (!dietPlan.pdfFile) {
+      return res.status(404).send({
+        message: "No PDF file associated with this diet plan"
       });
     }
 

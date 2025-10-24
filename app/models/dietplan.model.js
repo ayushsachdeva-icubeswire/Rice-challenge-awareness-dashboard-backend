@@ -24,39 +24,42 @@ const DietPlan = mongoose.model(
       trim: true // e.g., "Low Carb", "High Fiber", "Gluten Free", "Dairy Free", "Beginner Friendly"
     },
     pdfFile: {
-      filename: {
-        type: String,
-        required: true
+      type: {
+        filename: {
+          type: String,
+          required: true
+        },
+        originalName: {
+          type: String,
+          required: true
+        },
+        path: {
+          type: String,
+          required: false // Made optional for backward compatibility
+        },
+        s3Url: {
+          type: String,
+          required: false // S3 URL for the uploaded file
+        },
+        s3Key: {
+          type: String,
+          required: false // S3 key for file operations
+        },
+        size: {
+          type: Number,
+          required: true
+        },
+        uploadDate: {
+          type: Date,
+          default: Date.now
+        },
+        storageType: {
+          type: String,
+          enum: ['local', 's3'],
+          default: 's3' // Default to S3 storage
+        }
       },
-      originalName: {
-        type: String,
-        required: true
-      },
-      path: {
-        type: String,
-        required: false // Made optional for backward compatibility
-      },
-      s3Url: {
-        type: String,
-        required: false // S3 URL for the uploaded file
-      },
-      s3Key: {
-        type: String,
-        required: false // S3 key for file operations
-      },
-      size: {
-        type: Number,
-        required: true
-      },
-      uploadDate: {
-        type: Date,
-        default: Date.now
-      },
-      storageType: {
-        type: String,
-        enum: ['local', 's3'],
-        default: 's3' // Default to S3 storage
-      }
+      required: false // Make the entire pdfFile object optional
     },
     description: {
       type: String,
