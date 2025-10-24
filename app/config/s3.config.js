@@ -1,19 +1,11 @@
 const AWS = require('aws-sdk');
 
-// Configure AWS SDK
-AWS.config.update({
+// Configure AWS SDK with explicit credentials
+const s3Config = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-east-1'
-});
-
-// Create S3 instance
-const s3 = new AWS.S3();
-
-// S3 Configuration
-const s3Config = {
-  bucketName: process.env.S3_BUCKET_NAME || 'your-bucket-name',
   region: process.env.AWS_REGION || 'us-east-1',
+  bucketName: process.env.S3_BUCKET_NAME || 'your-bucket-name',
   // Folder structure for different file types
   folders: {
     dietplans: 'dietplans/',
@@ -25,6 +17,20 @@ const s3Config = {
     image: 5 * 1024 * 1024  // 5MB for images
   }
 };
+
+// Configure AWS SDK
+AWS.config.update({
+  accessKeyId: s3Config.accessKeyId,
+  secretAccessKey: s3Config.secretAccessKey,
+  region: s3Config.region
+});
+
+// Create S3 instance
+const s3 = new AWS.S3({
+  accessKeyId: s3Config.accessKeyId,
+  secretAccessKey: s3Config.secretAccessKey,
+  region: s3Config.region
+});
 
 module.exports = {
   s3,
