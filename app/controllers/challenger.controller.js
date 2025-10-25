@@ -50,6 +50,7 @@ exports.register = async (req, res) => {
         let saveTo = new Challenger({ ...body, otp });
         let saved = await saveTo.save();
         let whatsappResp = await sendOTP(body?.mobile, otp);
+        // await fireTrackingPixel(11031, saved?.name, saved?.mobile);
         return res.status(200).json({
             data: {
                 _id: saved?._id,
@@ -225,6 +226,7 @@ exports.submit = async (req, res) => {
         found.pdf = records[0]?.pdf;
         let saved = await found?.save();
         let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration);
+        // await fireTrackingPixel(11032, found?.name, found?.mobile);
         return res.status(200).json({
             data: records?.length ? records[0]?.pdf : null,
             message: "Data Fetched !",
@@ -472,3 +474,13 @@ async function sendPlan(mobile, name, pdf, filename, duration) {
         }
     });
 }
+
+// async function fireTrackingPixel(goalId, name, mobile) {
+//   try {
+//     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&goal_id=${goalId}&adv_sub1=${encodeURIComponent(name)}&adv_sub2=${encodeURIComponent(mobile)}`;
+//     const response = await axios.get(url);
+//     console.log(`Pixel (goal_id=${goalId}) fired successfully:`, response.status);
+//   } catch (error) {
+//     console.error(`Error firing pixel (goal_id=${goalId}):`, error.message);
+//   }
+// }
