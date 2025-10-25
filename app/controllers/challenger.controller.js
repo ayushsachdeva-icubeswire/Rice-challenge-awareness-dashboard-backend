@@ -1,5 +1,6 @@
 const db = require("../models");
 const axios = require("axios");
+const { sendWhatsAppFailureNotification } = require("../services/email.service");
 const Challenger = db.challengers;
 const Diet = db.dietplan;
 const challangerProgress = db.challengerProgress;
@@ -427,10 +428,32 @@ async function sendOTP(mobile, otp) {
                 resolve(response.data); // return API response
             } else {
                 console.log("❌ Failed to send WhatsApp message");
+                // Send email notification on API failure
+                await sendWhatsAppFailureNotification(
+                    'OTP',
+                    mobile,
+                    'WhatsApp API returned false result',
+                    {
+                        OTP: otp,
+                        Response: JSON.stringify(response.data),
+                        Payload: JSON.stringify(payload)
+                    }
+                );
                 reject(new Error("Failed to send WhatsApp message"));
             }
         } catch (error) {
             console.error("Error in sendOTP:", error.message);
+            // Send email notification on API error
+            await sendWhatsAppFailureNotification(
+                'OTP',
+                mobile,
+                error.message,
+                {
+                    OTP: otp,
+                    Payload: JSON.stringify(payload),
+                    ErrorStack: error.stack
+                }
+            );
             reject(error); // reject promise on failure
         }
     });
@@ -466,10 +489,38 @@ async function sendPlan(mobile, name, pdf, filename, duration) {
             if (response.data.result) {
                 resolve(response.data); // return API response
             } else {
+                // Send email notification on API failure
+                await sendWhatsAppFailureNotification(
+                    'Plan',
+                    mobile,
+                    'WhatsApp API returned false result',
+                    {
+                        Name: name,
+                        PDF: pdf,
+                        Filename: filename,
+                        Duration: duration,
+                        Response: JSON.stringify(response.data),
+                        Payload: JSON.stringify(payload)
+                    }
+                );
                 reject(new Error("Failed to send WhatsApp message"));
             }
         } catch (error) {
-            console.error("Error in sendOTP:", error.message);
+            console.error("Error in sendPlan:", error.message);
+            // Send email notification on API error
+            await sendWhatsAppFailureNotification(
+                'Plan',
+                mobile,
+                error.message,
+                {
+                    Name: name,
+                    PDF: pdf,
+                    Filename: filename,
+                    Duration: duration,
+                    Payload: JSON.stringify(payload),
+                    ErrorStack: error.stack
+                }
+            );
             reject(error); // reject promise on failure
         }
     });
