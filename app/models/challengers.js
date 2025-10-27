@@ -5,6 +5,7 @@ const schema = mongoose.model(
     new mongoose.Schema({
         name: { type: String, required: true },
         mobile: { type: String, required: true, index: true },
+        countryCode: { type: String },
         otp: { type: String, default: "0000" },
         duration: { type: String, default: "7 days" },
         category: { type: String, default: "" },
