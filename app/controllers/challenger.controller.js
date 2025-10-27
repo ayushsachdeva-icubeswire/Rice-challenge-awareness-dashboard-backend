@@ -1,6 +1,7 @@
 const db = require("../models");
 const axios = require("axios");
 const { sendWhatsAppFailureNotification } = require("../services/email.service");
+const logger = require("../config/logger.config");
 const Challenger = db.challengers;
 const Diet = db.dietplan;
 const challangerProgress = db.challengerProgress;
@@ -77,7 +78,12 @@ exports.register = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     try {
         let body = req?.body;
-        console.log("checking req of challenge verify OTP", body);
+        logger.info("OTP verification attempt", {
+            userId: body?.userId,
+            mobile: body?.mobile ? `***${body.mobile.slice(-4)}` : 'N/A',
+            timestamp: new Date().toISOString()
+        });
+
         let found = await Challenger?.findById(body?.userId, {
             otp: 1,
             otpVerified: 1,
@@ -85,7 +91,13 @@ exports.verifyOTP = async (req, res) => {
             name: 1,
             duration: 1
         });
+
         if (!found) {
+            logger.warn("Invalid user ID during OTP verification", {
+                userId: body?.userId,
+                ip: req.ip,
+                userAgent: req.get('User-Agent')
+            });
             return res.status(400).json({
                 data: null,
                 message: "Invalid User Id !",
@@ -93,7 +105,17 @@ exports.verifyOTP = async (req, res) => {
                 statusCode: 400,
             });
         }
+
         if (found?.otp != body?.otp) {
+            logger.error("Invalid OTP provided", {
+                userId: body?.userId,
+                userName: found?.name,
+                mobile: found.mobile,
+                providedOtp: body?.otp,
+                ip: req.ip,
+                userAgent: req.get('User-Agent'),
+                timestamp: new Date().toISOString()
+            });
             return res.status(400).json({
                 data: null,
                 message: "Invalid OTP !",
@@ -101,8 +123,18 @@ exports.verifyOTP = async (req, res) => {
                 statusCode: 400,
             });
         }
+
         found.otpVerified = true;
         let saved = await found?.save();
+
+        logger.info("OTP verified successfully", {
+            userId: body?.userId,
+            userName: found?.name,
+            mobile: found.mobile,
+            duration: found?.duration,
+            timestamp: new Date().toISOString()
+        });
+
         return res.status(200).json({
             data: saved?.otpVerified,
             message: "OTP Verified !",
@@ -110,6 +142,12 @@ exports.verifyOTP = async (req, res) => {
             statusCode: 200,
         });
     } catch (error) {
+        logger.error("Server error during OTP verification", {
+            userId: req?.body?.userId,
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
         return res.status(500).json({
             data: null,
             message: "Server Error!",
