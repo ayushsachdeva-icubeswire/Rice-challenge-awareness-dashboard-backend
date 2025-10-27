@@ -1,9 +1,9 @@
-const { authJwt } = require("../middlewares");
+const { authJwt, csrfProtection, provideCsrfToken } = require("../middlewares");
 const controller = require("../controllers/challenger.controller");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-CSRF-Token, CSRF-Token");
     next();
   });
 
@@ -66,7 +66,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/register", controller.register);
+  app.post("/api/challenger/register", csrfProtection, controller.register);
 
   // Verify OTP
   /**
@@ -87,6 +87,9 @@ module.exports = function (app) {
    *            otp:
    *              type: string
    *              example: 1234
+   *            _csrf:
+   *              type: string
+   *              example: csrf-token-here
    *     tags: [Challenger]
    *     responses:
    *       200:
@@ -110,7 +113,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/verify", controller.verifyOTP);
+  app.post("/api/challenger/verify", csrfProtection, controller.verifyOTP);
 
   /**
    * @swagger
@@ -186,9 +189,9 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/submit", controller.submit);
+  app.post("/api/challenger/submit", csrfProtection, controller.submit);
 
-  app.post("/challenger/update-engagement", controller.updateEngagement);
+  app.post("/challenger/update-engagement", csrfProtection, controller.updateEngagement);
 
   app.get("/api/challenger/progress", controller.getEngagement);
 };

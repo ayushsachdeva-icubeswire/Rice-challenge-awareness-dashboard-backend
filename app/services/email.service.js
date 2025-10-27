@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email.config');
 
 // Create transporter using configuration
-const transporter = nodemailer.createTransporter(emailConfig.smtp);
+const transporter = nodemailer.createTransport(emailConfig.smtp);
 
 /**
  * Send WhatsApp API failure notification email
@@ -43,7 +43,7 @@ const sendWhatsAppFailureNotification = async (apiType, mobile, errorMessage, ad
         const info = await transporter.sendMail(mailOptions);
         console.log('✅ WhatsApp failure notification email sent:', info.messageId);
         return { success: true, messageId: info.messageId };
-        
+
     } catch (error) {
         console.error('❌ Failed to send WhatsApp failure notification email:', error.message);
         return { success: false, error: error.message };

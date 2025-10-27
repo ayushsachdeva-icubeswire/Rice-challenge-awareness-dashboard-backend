@@ -9,7 +9,36 @@ const dbConfig = require("./app/config/db.config");
 
 const app = express();
 
-app.use(cors());
+// Configure CORS to allow credentials
+app.use(cors({
+  credentials: true,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'http://13.201.26.193',
+      'https://www.daawat.com',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now, can be restricted later
+    }
+  }
+}));
+
+// Configure session for CSRF
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || 'your-secret-key-change-this'],
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
+
 app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
@@ -88,12 +117,26 @@ const options = {
 const swaggerSpac = swaggerJSDoc(options);
 app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerSpac));
 
+// Import CSRF middleware
+const { csrfProtection, provideCsrfToken, csrfErrorHandler } = require("./app/middlewares");
+
+// Add CSRF token endpoint
+app.get('/api/csrf-token', csrfProtection, provideCsrfToken, (req, res) => {
+  res.json({
+    csrfToken: req.csrfToken(),
+    message: 'CSRF token generated successfully'
+  });
+});
+
 // routes
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
 require("./app/routes/dietplan.routes")(app);
 require("./app/routes/story.routes")(app);
 require("./app/routes/challengers")(app);
+
+// Add CSRF error handler after all routes
+app.use(csrfErrorHandler);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
