@@ -194,4 +194,5 @@ module.exports = function (app) {
   app.post("/challenger/update-engagement", csrfProtection, controller.updateEngagement);
 
   app.get("/api/challenger/progress", controller.getEngagement);
+  app.get("/api/challenger/v2/progress", controller.getERValue);
 };

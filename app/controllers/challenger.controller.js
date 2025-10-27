@@ -581,3 +581,49 @@ async function sendPlan(mobile, name, pdf, filename, duration) {
 //     console.error(`Error firing pixel (goal_id=${goalId}):`, error.message);
 //   }
 // }
+
+exports.getERValue = async (req, res) => {
+    try {
+           const { data: externalData } = await axios.get(
+  "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
+  {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    params: {
+      "hashtags[0]": "onlydaawatnovember",
+      "hashtags[1]": "onlyricenovember",
+      "hashtags[2]": "riceyourawareness",
+    },
+  }
+);
+ const initialValue = externalData?.total_engagements || 0;
+        let challengerCount = await Challenger.countDocuments({
+            isDeleted: false,
+            // $or: [
+            //     { otpVerified: { $eq: true } },
+            //     { isPrevious: { $eq: true } }
+            // ]
+            });
+
+        let data = {
+            intractionCount: initialValue,
+            challengerCount: challengerCount,
+        };
+
+        return res.status(200).json({
+            data: data,
+            message: "Engagement Fetched!",
+            error: null,
+            statusCode: 200,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            data: null,
+            message: "Server Error!",
+            error: error.message,
+            statusCode: 500,
+        });
+    }
+};
