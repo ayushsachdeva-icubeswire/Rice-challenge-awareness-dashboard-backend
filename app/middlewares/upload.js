@@ -16,15 +16,7 @@ const storiesDir = 'uploads/stories';
 const dietplanStorage = multer.memoryStorage();
 
 // Configure storage for stories (Images) - keeping disk storage for now
-const storyStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, storiesDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'story-' + uniqueName + path.extname(file.originalname));
-  }
-});
+const storyStorage = multer.memoryStorage();
 
 // File filter for PDFs
 const pdfFilter = (req, file, cb) => {
