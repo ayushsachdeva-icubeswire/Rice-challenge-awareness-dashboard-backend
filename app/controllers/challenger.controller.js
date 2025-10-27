@@ -366,7 +366,11 @@ exports.getEngagement = async (req, res) => {
                         Accept: "application/json",
                         "Content-Type": "application/json",
                     },
-                    params: { "hashtags[0]": "daawatbiryani" },
+                    params: {
+      "hashtags[0]": "onlydaawatnovember",
+      "hashtags[1]": "onlyricenovember",
+      "hashtags[2]": "riceyourawareness",
+    },
                 }
             );
 
