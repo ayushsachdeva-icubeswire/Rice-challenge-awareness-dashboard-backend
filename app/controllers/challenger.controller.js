@@ -45,7 +45,7 @@ exports.listAdmin = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-    try {challenger/submi
+    try {
         let body = req?.body;
         let otp = generate(4);
         let saveTo = new Challenger({ ...body, otp });
