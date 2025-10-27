@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email.config');
 
 // Create transporter using configuration
-const transporter = nodemailer.createTransporter(emailConfig.smtp);
+const transporter = nodemailer.createTransport(emailConfig.smtp);
 
 /**
  * Send WhatsApp API failure notification email

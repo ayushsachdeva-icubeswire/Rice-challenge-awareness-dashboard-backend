@@ -45,7 +45,7 @@ exports.listAdmin = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-    try {
+    try {challenger/submi
         let body = req?.body;
         let otp = generate(4);
         let saveTo = new Challenger({ ...body, otp });
@@ -487,6 +487,8 @@ async function sendPlan(mobile, name, pdf, filename, duration) {
                 },
             });
             if (response.data.result) {
+                console.log(response.data);
+                console.log("✅ WhatsApp message sent successfully");
                 resolve(response.data); // return API response
             } else {
                 // Send email notification on API failure
