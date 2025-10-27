@@ -45,7 +45,7 @@ exports.listAdmin = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-    try {challenger/submi
+    try {
         let body = req?.body;
         let otp = generate(4);
         let saveTo = new Challenger({ ...body, otp });
@@ -344,7 +344,13 @@ exports.getEngagement = async (req, res) => {
             });
         }
 
-        let challengerCount = await Challenger.countDocuments({ isDeleted: false });
+        let challengerCount = await Challenger.countDocuments({
+            isDeleted: false,
+            $or: [
+                { otpVerified: { $eq: true } },
+                { isPrevious: { $eq: true } }
+            ]
+            });
         let challengerProgress = await challangerProgress
             .findOne({ name: "challenge" })
             .sort({ createdAt: -1 });
