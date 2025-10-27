@@ -354,37 +354,43 @@ exports.updateEngagement = async (req, res) => {
 
 exports.getEngagement = async (req, res) => {
     try {
-        let lastER = await challangerProgress
-            .findOne({ name: "engagement" })
-            .sort({ createdAt: -1 });
+        const lastER = await challangerProgress
+        .findOne({ name: "engagement" })
+        .sort({ createdAt: -1 });
 
-        if (!lastER) {
-            const { data: externalData } = await axios.get(
-                "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
-                {
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    params: {
-      "hashtags[0]": "onlydaawatnovember",
-      "hashtags[1]": "onlyricenovember",
-      "hashtags[2]": "riceyourawareness",
-    },
-                }
-            );
+    // Common API call parameters
+    const apiConfig = {
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+        params: {
+            "hashtags[0]": "onlydaawatnovember",
+            "hashtags[1]": "onlyricenovember",
+            "hashtags[2]": "riceyourawareness",
+        },
+    };
 
-            const initialValue = externalData?.total_engagements || 0;
+    // Fetch external data once
+    const { data: externalData } = await axios.get(
+        "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
+        apiConfig
+    );
 
-            // Insert baseline record
-            await challangerProgress.create({
-                name: "engagement",
-                previousValue: 0,
-                currentValue: initialValue,
-                manualEntries: 0,
-                difference: 0,
-            });
-        }
+    const currentValue = externalData?.total_engagements || 0;
+
+    // Prepare insert data
+    const progressData = {
+        name: "engagement",
+        previousValue: lastER ? lastER.currentValue : 0,
+        currentValue,
+        manualEntries: lastER ? currentValue - lastER.currentValue : 0,
+        difference: 0,
+    };
+
+    // Create new progress record
+    const newRecord = await challangerProgress.create(progressData);
+
 
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
@@ -408,7 +414,7 @@ exports.getEngagement = async (req, res) => {
         }
 
         let data = {
-            erProgress: lastER,
+            erProgress: newRecord,
             challengerProgress: challengerProgress,
         };
 
