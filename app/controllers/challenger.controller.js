@@ -80,7 +80,7 @@ exports.verifyOTP = async (req, res) => {
         let body = req?.body;
         logger.info("OTP verification attempt", {
             userId: body?.userId,
-            mobile: body?.mobile ? `***${body.mobile.slice(-4)}` : 'N/A',
+            mobile: body.mobile,
             timestamp: new Date().toISOString()
         });
 
@@ -355,41 +355,41 @@ exports.updateEngagement = async (req, res) => {
 exports.getEngagement = async (req, res) => {
     try {
         const lastER = await challangerProgress
-        .findOne({ name: "engagement" })
-        .sort({ createdAt: -1 });
+            .findOne({ name: "engagement" })
+            .sort({ createdAt: -1 });
 
-    // Common API call parameters
-    const apiConfig = {
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-        },
-        params: {
-            "hashtags[0]": "onlydaawatnovember",
-            "hashtags[1]": "onlyricenovember",
-            "hashtags[2]": "riceyourawareness",
-        },
-    };
+        // Common API call parameters
+        const apiConfig = {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            params: {
+                "hashtags[0]": "onlydaawatnovember",
+                "hashtags[1]": "onlyricenovember",
+                "hashtags[2]": "riceyourawareness",
+            },
+        };
 
-    // Fetch external data once
-    const { data: externalData } = await axios.get(
-        "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
-        apiConfig
-    );
+        // Fetch external data once
+        const { data: externalData } = await axios.get(
+            "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
+            apiConfig
+        );
 
-    const currentValue = externalData?.total_engagements || 0;
+        const currentValue = externalData?.total_engagements || 0;
 
-    // Prepare insert data
-    const progressData = {
-        name: "engagement",
-        previousValue: lastER ? lastER.currentValue : 0,
-        currentValue,
-        manualEntries: lastER ? currentValue - lastER.currentValue : 0,
-        difference: 0,
-    };
+        // Prepare insert data
+        const progressData = {
+            name: "engagement",
+            previousValue: lastER ? lastER.currentValue : 0,
+            currentValue,
+            manualEntries: lastER ? currentValue - lastER.currentValue : 0,
+            difference: 0,
+        };
 
-    // Create new progress record
-    const newRecord = await challangerProgress.create(progressData);
+        // Create new progress record
+        const newRecord = await challangerProgress.create(progressData);
 
 
         let challengerCount = await Challenger.countDocuments({
