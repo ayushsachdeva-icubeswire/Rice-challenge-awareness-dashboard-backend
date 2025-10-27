@@ -51,7 +51,7 @@ exports.register = async (req, res) => {
         let otp = generate(4);
         let saveTo = new Challenger({ ...body, otp });
         let saved = await saveTo.save();
-        let whatsappResp = await sendOTP(body?.mobile, otp);
+        let whatsappResp = await sendOTP(body?.mobile, otp, body.countryCode);
         // await fireTrackingPixel(11031, saved?.name, saved?.mobile);
         return res.status(200).json({
             data: {
@@ -264,7 +264,7 @@ exports.submit = async (req, res) => {
         found.type = body?.type;
         found.pdf = records[0]?.pdf;
         let saved = await found?.save();
-        let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration);
+        let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
         // await fireTrackingPixel(11032, found?.name, found?.mobile);
         return res.status(200).json({
             data: records?.length ? records[0]?.pdf : null,
@@ -398,7 +398,7 @@ exports.getEngagement = async (req, res) => {
             //     { otpVerified: { $eq: true } },
             //     { isPrevious: { $eq: true } }
             // ]
-            });
+        });
         let challengerProgress = await challangerProgress
             .findOne({ name: "challenge" })
             .sort({ createdAt: -1 });
@@ -449,12 +449,12 @@ function generate(n) {
     return ("" + number).substring(add);
 }
 
-async function sendOTP(mobile, otp) {
+async function sendOTP(mobile, otp, countryCode) {
     return new Promise(async (resolve, reject) => {
         try {
             // Example: simulate sending WhatsApp message via API
             const payload = {
-                "countryCode": "+91",
+                "countryCode": countryCode,
                 "phoneNumber": mobile,
                 "type": "Template",
                 "template": {
@@ -513,11 +513,11 @@ async function sendOTP(mobile, otp) {
     });
 }
 
-async function sendPlan(mobile, name, pdf, filename, duration) {
+async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
     return new Promise(async (resolve, reject) => {
         try {
             const payload = {
-                "countryCode": "+91",
+                "countryCode": countryCode,
                 "phoneNumber": mobile,
                 "type": "Template",
                 "template": {
@@ -594,28 +594,28 @@ async function sendPlan(mobile, name, pdf, filename, duration) {
 
 exports.getERValue = async (req, res) => {
     try {
-           const { data: externalData } = await axios.get(
-  "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
-  {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    params: {
-      "hashtags[0]": "onlydaawatnovember",
-      "hashtags[1]": "onlyricenovember",
-      "hashtags[2]": "riceyourawareness",
-    },
-  }
-);
- const initialValue = externalData?.total_engagements || 0;
+        const { data: externalData } = await axios.get(
+            "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
+            {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                params: {
+                    "hashtags[0]": "onlydaawatnovember",
+                    "hashtags[1]": "onlyricenovember",
+                    "hashtags[2]": "riceyourawareness",
+                },
+            }
+        );
+        const initialValue = externalData?.total_engagements || 0;
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
             // $or: [
             //     { otpVerified: { $eq: true } },
             //     { isPrevious: { $eq: true } }
             // ]
-            });
+        });
 
         let data = {
             intractionCount: initialValue,
