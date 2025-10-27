@@ -1,8 +1,11 @@
 const db = require("../models");
 const Story = db.story;
+const path = require('path');
 const Challenge = db.challengers;
 const axios = require('axios');
 require('dotenv').config();
+const { uploadToS3, deleteFromS3, extractKeyFromUrl, getFileStreamFromS3, getFileMetadata, s3Config } = require('../services/s3.service');
+
 
 // Get base URL from environment or default to localhost
 const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 8080}`;
@@ -31,11 +34,29 @@ exports.create = async (req, res) => {
       res.status(404).send({ message: "Influencer not found!" });
       return;
     }
-
+    let pdfFileData = null;
     // Extract influencer data from API response
     const influencerData = await apiResponse.data;
-    // Create a Story with API data
-    const story = new Story({
+     if (req.file) {
+      // Upload file to S3
+      const s3UploadResult = await uploadToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        s3Config.folders.stories
+      );
+
+      pdfFileData = {
+        filename: path.basename(s3UploadResult.key),
+        originalName: req.file.originalname,
+        s3Url: s3UploadResult.url,
+        s3Key: s3UploadResult.key,
+        size: req.file.size,
+        storageType: 's3',
+        uploadDate: new Date()
+      };
+    }
+    const storyData = {
       handle: req.body.handle,
       influencer: {
         id: influencerData.data.influencer._id || '',
@@ -46,14 +67,19 @@ exports.create = async (req, res) => {
         engagementRate: influencerData.data.influencer.instagram.engagement_ratio  || 0
       },
       storyLink: req.body.storyLink,
-      imageUrl: req.file ? `${BASE_URL}/uploads/stories/${req.file.filename}` : '',
+      imageUrl: pdfFileData ? pdfFileData.s3Url : '',
       views: req.body.views || 0,
       likes: req.body.likes || 0
-    });
+    };
+    if (pdfFileData) {
+      storyData.storyFile = pdfFileData;
+    }
+    // Create a Story with API data
+    const story = new Story(storyData);
 
     // Save Story in the database
     const savedStory = await story.save();
-    res.send(savedStory);
+    return res.send(savedStory);
   } catch (err) {
     // Handle API errors
     if (err.response) {
