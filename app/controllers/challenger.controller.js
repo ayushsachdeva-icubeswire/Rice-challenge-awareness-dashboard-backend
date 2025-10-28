@@ -438,18 +438,23 @@ exports.getEngagement = async (req, res) => {
         );
 
         const currentValue = externalData?.total_engagements || 0;
+        
+        let newRecord = lastER;
 
-        // Prepare insert data
-        const progressData = {
-            name: "engagement",
-            previousValue: lastER ? lastER.currentValue : 0,
-            currentValue,
-            manualEntries: lastER ? currentValue - lastER.currentValue : 0,
-            difference: 0,
-        };
+        // Only create new record if there's no last record or values are different
+        if (!lastER || currentValue !== lastER.currentValue) {
+            // Prepare insert data
+            const progressData = {
+                name: "engagement",
+                previousValue: lastER ? lastER.currentValue : 0,
+                currentValue,
+                manualEntries: lastER ? currentValue - lastER.currentValue : 0,
+                difference: lastER ? currentValue - lastER.currentValue : 0,
+            };
 
-        // Create new progress record
-        const newRecord = await challangerProgress.create(progressData);
+            // Create new progress record
+            newRecord = await challangerProgress.create(progressData);
+        }
 
 
         let challengerCount = await Challenger.countDocuments({
