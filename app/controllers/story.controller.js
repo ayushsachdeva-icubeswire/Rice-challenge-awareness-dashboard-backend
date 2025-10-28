@@ -377,14 +377,16 @@ exports.dashboard = async (req, res) => {
           "Content-Type": "application/json"
         },
         params: {
-          "hashtags[0]": "itchotels"
+          "hashtags[0]": "onlydaawatnovember",
+          "hashtags[1]": "onlyricenovember",
+          "hashtags[2]": "riceyourawareness",
         }
       }
     );
     const externalData = await apiResponse.data;
     res.send({
         challengrsGraphData : data,
-      postGraphData : externalData[0] || []
+      postGraphData : externalData || []
     });
   } catch (err) {
     res.status(500).send({

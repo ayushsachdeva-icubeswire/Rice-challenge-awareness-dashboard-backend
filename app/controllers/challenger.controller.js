@@ -30,8 +30,30 @@ exports.listAdmin = async (req, res) => {
             .limit(limit);
 
         const total = await Challenger.countDocuments(filter);
+        const result = await Challenger.aggregate([
+        { $match: filter },
+        {
+            $group: {
+            _id: {
+                $cond: {
+                if: {
+                    $or: [
+                    { $eq: ["$category", null] },
+                    { $eq: ["$category", ""] },
+                    ],
+                },
+                then: "None",
+                else: "$category",
+                },
+            },
+            count: { $sum: 1 },
+            },
+        },
+        { $sort: { count: -1 } }
+        ]);
         res.send({
             data: records,
+            overview: result,
             currentPage: page,
             totalPages: Math.ceil(total / limit),
             totalItems: total,
@@ -539,7 +561,7 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
                 "phoneNumber": mobile,
                 "type": "Template",
                 "template": {
-                    "name": "meal_plan_7",
+                    "name": "meal_plan_5",
                     "languageCode": "en",
                     "headerValues": [
                         pdf
