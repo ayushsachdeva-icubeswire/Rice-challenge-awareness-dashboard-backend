@@ -85,7 +85,6 @@ exports.register = async (req, res) => {
             existingChallenger.duration = body.duration;
             existingChallenger.countryCode = body.countryCode;
             existingChallenger.otp = otp;
-            existingChallenger.otpVerified = false; // Reset OTP verification
             saved = await existingChallenger.save();
         } else {
             // Create new challenger if no existing one found
