@@ -30,8 +30,30 @@ exports.listAdmin = async (req, res) => {
             .limit(limit);
 
         const total = await Challenger.countDocuments(filter);
+        const result = await Challenger.aggregate([
+        { $match: filter },
+        {
+            $group: {
+            _id: {
+                $cond: {
+                if: {
+                    $or: [
+                    { $eq: ["$category", null] },
+                    { $eq: ["$category", ""] },
+                    ],
+                },
+                then: "None",
+                else: "$category",
+                },
+            },
+            count: { $sum: 1 },
+            },
+        },
+        { $sort: { count: -1 } }
+        ]);
         res.send({
             data: records,
+            overview: result,
             currentPage: page,
             totalPages: Math.ceil(total / limit),
             totalItems: total,
