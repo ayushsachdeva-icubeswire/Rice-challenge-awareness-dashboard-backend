@@ -231,6 +231,24 @@ exports.submit = async (req, res) => {
                 statusCode: 400,
             });
         }
+
+        // ✅ Check if OTP has been verified
+        if (!found.otpVerified) {
+            logger.warn("Attempt to access submit without OTP verification", {
+                userId: body?.userId,
+                userName: found?.name,
+                mobile: found.mobile,
+                ip: req.ip,
+                userAgent: req.get('User-Agent'),
+                timestamp: new Date().toISOString()
+            });
+            return res.status(403).json({
+                data: null,
+                message: "OTP verification required before accessing this resource!",
+                error: "Forbidden - OTP Not Verified",
+                statusCode: 403,
+            });
+        }
         let records = await Diet.aggregate([
             {
                 $match: {
