@@ -22,8 +22,9 @@ exports.listAdmin = async (req, res) => {
                     { mobile: { $regex: req?.query?.search, $options: "i" } },
                 ],
             };
-        if (req.query.duration) filter.duration = req.query.duration;
-        if (req.query.category) filter.category = req.query.category;
+    if (req.query.duration) filter.duration = req.query.duration;
+    if (req.query.category) filter.category = req.query.category;
+    if (req.query.subcategory) filter.subcategory = req.query.subcategory;
         const records = await Challenger.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -543,7 +544,7 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
                 "phoneNumber": mobile,
                 "type": "Template",
                 "template": {
-                    "name": "meal_plan_5",
+                    "name": "meal_plan_8",
                     "languageCode": "en",
                     "headerValues": [
                         pdf
