@@ -71,8 +71,28 @@ exports.register = async (req, res) => {
     try {
         let body = req?.body;
         let otp = generate(4);
-        let saveTo = new Challenger({ ...body, otp });
-        let saved = await saveTo.save();
+
+        // Check for existing challenger with the same mobile number
+        let existingChallenger = await Challenger.findOne({ 
+            mobile: body.mobile,
+            isDeleted: false 
+        }).sort({ createdAt: -1 }); // Get the latest one
+
+        let saved;
+        if (existingChallenger) {
+            // Update existing challenger with new data
+            existingChallenger.name = body.name;
+            existingChallenger.duration = body.duration;
+            existingChallenger.countryCode = body.countryCode;
+            existingChallenger.otp = otp;
+            existingChallenger.otpVerified = false; // Reset OTP verification
+            saved = await existingChallenger.save();
+        } else {
+            // Create new challenger if no existing one found
+            let saveTo = new Challenger({ ...body, otp });
+            saved = await saveTo.save();
+        }
+
         let whatsappResp = await sendOTP(body?.mobile, otp, body.countryCode);
         // await fireTrackingPixel(11031, saved?.name, saved?.mobile);
         return res.status(200).json({

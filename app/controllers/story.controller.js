@@ -149,10 +149,29 @@ exports.findAll = async (req, res) => {
     const stats = await Story.aggregate([
       { $match: condition },
       {
-        $group: {
-          _id: null,
-          totalViews: { $sum: "$views" },
-          totalLikes: { $sum: "$likes" },
+        $facet: {
+          // Get total views and likes
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalViews: { $sum: "$views" },
+                totalLikes: { $sum: "$likes" }
+              }
+            }
+          ],
+          // Get unique influencer count
+          uniqueInfluencers: [
+            {
+              $group: {
+                _id: "$handle",  // Group by handle to count unique influencers
+                influencerData: { $first: "$influencer" }  // Keep the influencer data for reference
+              }
+            },
+            {
+              $count: "count"  // Count the unique handles
+            }
+          ]
         }
       }
     ]);
@@ -173,8 +192,9 @@ exports.findAll = async (req, res) => {
         perPage: limitNum
       },
       stats: {
-        totalViews: stats[0]?.totalViews || 0,
-        totalLikes: stats[0]?.totalLikes || 0
+        totalViews: stats[0]?.totals[0]?.totalViews || 0,
+        totalLikes: stats[0]?.totals[0]?.totalLikes || 0,
+        uniqueInfluencers: stats[0]?.uniqueInfluencers[0]?.count || 0
       }
     };
 
