@@ -386,7 +386,7 @@ exports.dashboard = async (req, res) => {
     const externalData = await apiResponse.data;
     res.send({
         challengrsGraphData : data,
-      postGraphData : externalData[0] || []
+      postGraphData : externalData || []
     });
   } catch (err) {
     res.status(500).send({
