@@ -377,7 +377,9 @@ exports.dashboard = async (req, res) => {
           "Content-Type": "application/json"
         },
         params: {
-          "hashtags[0]": "itchotels"
+          "hashtags[0]": "onlydaawatnovember",
+          "hashtags[1]": "onlyricenovember",
+          "hashtags[2]": "riceyourawareness",
         }
       }
     );
