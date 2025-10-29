@@ -86,6 +86,7 @@ exports.register = async (req, res) => {
             existingChallenger.duration = body.duration;
             existingChallenger.countryCode = body.countryCode;
             existingChallenger.otp = otp;
+            existingChallenger.updatedAt = new Date();
             saved = await existingChallenger.save();
         } else {
             // Create new challenger if no existing one found
@@ -167,6 +168,7 @@ exports.verifyOTP = async (req, res) => {
         }
 
         found.otpVerified = true;
+        found.updatedAt = new Date();
         let saved = await found?.save();
 
         logger.info("OTP verified successfully", {
@@ -323,6 +325,7 @@ exports.submit = async (req, res) => {
         found.subcategory = body?.subcategory;
         found.type = body?.type;
         found.pdf = records[0]?.pdf;
+        found.updatedAt = new Date();
         let saved = await found?.save();
         let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
         // await fireTrackingPixel(11032, found?.name, found?.mobile);
