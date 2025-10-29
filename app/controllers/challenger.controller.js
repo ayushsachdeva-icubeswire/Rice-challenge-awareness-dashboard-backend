@@ -416,6 +416,25 @@ exports.updateEngagement = async (req, res) => {
 };
 
 exports.getEngagement = async (req, res) => {
+    //     const ip =
+    //     req.headers['cf-connecting-ip'] ||
+    //     req.headers['client-ip'] ||
+    //     req.headers['x-forwarded-for']?.split(',')[0] ||
+    //     req.headers['x-real-ip'] ||
+    //     req.socket?.remoteAddress ||
+    //     '';
+
+    //   res.json({ ip: ip.replace('::ffff:', '') });
+
+    logger.info("IP Address fetched", {
+        ip: req.headers['cf-connecting-ip'] ||
+            req.headers['client-ip'] ||
+            req.headers['x-forwarded-for']?.split(',')[0] ||
+            req.headers['x-real-ip'] ||
+            req.socket?.remoteAddress ||
+            ''
+    });
+
     try {
         // const lastER = await challangerProgress
         //     .findOne({ name: "engagement" })
