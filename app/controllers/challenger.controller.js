@@ -461,17 +461,17 @@ exports.getEngagement = async (req, res) => {
 
         const progressData = {
             name: "engagement",
-            previousValue: 45420,
-            currentValue: 45425,
+            previousValue: 55951,
+            currentValue : 55951,
             manualEntries: 0,
             difference: 5,
         };
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
-            $or: [
-                { otpVerified: { $eq: true } },
-                { isPrevious: { $eq: true } }
-            ]
+            // $or: [
+            //     { otpVerified: { $eq: true } },
+            //     { isPrevious: { $eq: true } }
+            // ]
         });
         let challengerProgress = await challangerProgress
             .findOne({ name: "challenge" })
