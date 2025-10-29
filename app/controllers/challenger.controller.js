@@ -72,6 +72,12 @@ exports.register = async (req, res) => {
     try {
         let body = req?.body;
         let otp = generate(4);
+        let ip = req.headers['cf-connecting-ip'] ||
+            req.headers['client-ip'] ||
+            req.headers['x-forwarded-for']?.split(',')[0] ||
+            req.headers['x-real-ip'] ||
+            req.socket?.remoteAddress ||
+            '';
 
         // Check for existing challenger with the same mobile number
         let existingChallenger = await Challenger.findOne({
@@ -81,30 +87,17 @@ exports.register = async (req, res) => {
 
         let saved;
         if (existingChallenger) {
-            logger.info("User's IP and OTP generation", {
-                ip: req.headers['cf-connecting-ip'] ||
-                    req.headers['client-ip'] ||
-                    req.headers['x-forwarded-for']?.split(',')[0] ||
-                    req.headers['x-real-ip'] ||
-                    req.socket?.remoteAddress ||
-                    '',
-            });
             // Update existing challenger with new data
             existingChallenger.name = body.name;
             existingChallenger.duration = body.duration;
             existingChallenger.countryCode = body.countryCode;
             existingChallenger.otp = otp;
-            existingChallenger.ip = req.headers['cf-connecting-ip'] ||
-                req.headers['client-ip'] ||
-                req.headers['x-forwarded-for']?.split(',')[0] ||
-                req.headers['x-real-ip'] ||
-                req.socket?.remoteAddress ||
-                '';
+            existingChallenger.ip = ip;
             existingChallenger.updatedAt = new Date();
             saved = await existingChallenger.save();
         } else {
             // Create new challenger if no existing one found
-            let saveTo = new Challenger({ ...body, otp });
+            let saveTo = new Challenger({ ...body, otp, ip });
             saved = await saveTo.save();
         }
 
