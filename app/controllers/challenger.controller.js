@@ -86,6 +86,12 @@ exports.register = async (req, res) => {
             existingChallenger.duration = body.duration;
             existingChallenger.countryCode = body.countryCode;
             existingChallenger.otp = otp;
+            existingChallenger.ip = req.headers['cf-connecting-ip'] ||
+                req.headers['client-ip'] ||
+                req.headers['x-forwarded-for']?.split(',')[0] ||
+                req.headers['x-real-ip'] ||
+                req.socket?.remoteAddress ||
+                '';
             existingChallenger.updatedAt = new Date();
             saved = await existingChallenger.save();
         } else {
@@ -121,6 +127,15 @@ exports.register = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     try {
         let body = req?.body;
+
+        let found = await Challenger?.findById(body?.userId, {
+            otp: 1,
+            otpVerified: 1,
+            mobile: 1,
+            name: 1,
+            duration: 1
+        });
+
         logger.info("OTP verification attemptt", {
             ip: req.headers['cf-connecting-ip'] ||
                 req.headers['client-ip'] ||
@@ -129,16 +144,8 @@ exports.verifyOTP = async (req, res) => {
                 req.socket?.remoteAddress ||
                 '',
             userId: body?.userId,
-            mobile: body?.mobile,
+            mobile: found?.mobile,
             timestamp: new Date().toISOString()
-        });
-
-        let found = await Challenger?.findById(body?.userId, {
-            otp: 1,
-            otpVerified: 1,
-            mobile: 1,
-            name: 1,
-            duration: 1
         });
 
         if (!found) {

@@ -13,6 +13,7 @@ const schema = mongoose.model(
         type: { type: String, default: "" },
         pdf: { type: String, default: "" },
         otpVerified: { type: Boolean, default: false },
+        ip: { type: String, default: "" },
         isDeleted: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         createdAt: { type: Date, default: Date.now },
