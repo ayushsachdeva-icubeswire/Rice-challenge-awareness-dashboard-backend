@@ -22,9 +22,9 @@ exports.listAdmin = async (req, res) => {
                     { mobile: { $regex: req?.query?.search, $options: "i" } },
                 ],
             };
-    if (req.query.duration) filter.duration = req.query.duration;
-    if (req.query.category) filter.category = req.query.category;
-    if (req.query.subcategory) filter.subcategory = req.query.subcategory;
+        if (req.query.duration) filter.duration = req.query.duration;
+        if (req.query.category) filter.category = req.query.category;
+        if (req.query.subcategory) filter.subcategory = req.query.subcategory;
         const records = await Challenger.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -32,25 +32,25 @@ exports.listAdmin = async (req, res) => {
 
         const total = await Challenger.countDocuments(filter);
         const result = await Challenger.aggregate([
-        { $match: filter },
-        {
-            $group: {
-            _id: {
-                $cond: {
-                if: {
-                    $or: [
-                    { $eq: ["$category", null] },
-                    { $eq: ["$category", ""] },
-                    ],
-                },
-                then: "None",
-                else: "$category",
+            { $match: filter },
+            {
+                $group: {
+                    _id: {
+                        $cond: {
+                            if: {
+                                $or: [
+                                    { $eq: ["$category", null] },
+                                    { $eq: ["$category", ""] },
+                                ],
+                            },
+                            then: "None",
+                            else: "$category",
+                        },
+                    },
+                    count: { $sum: 1 },
                 },
             },
-            count: { $sum: 1 },
-            },
-        },
-        { $sort: { count: -1 } }
+            { $sort: { count: -1 } }
         ]);
         res.send({
             data: records,
@@ -74,9 +74,9 @@ exports.register = async (req, res) => {
         let otp = generate(4);
 
         // Check for existing challenger with the same mobile number
-        let existingChallenger = await Challenger.findOne({ 
+        let existingChallenger = await Challenger.findOne({
             mobile: body.mobile,
-            isDeleted: false 
+            isDeleted: false
         }).sort({ createdAt: -1 }); // Get the latest one
 
         let saved;
@@ -441,7 +441,7 @@ exports.getEngagement = async (req, res) => {
         // );
 
         // const currentValue = externalData?.total_engagements || 0;
-        
+
         // let newRecord = lastER;
 
         // // Only create new record if there's no last record or values are different
@@ -462,16 +462,16 @@ exports.getEngagement = async (req, res) => {
         const progressData = {
             name: "engagement",
             previousValue: 45420,
-            currentValue : 45425,
+            currentValue: 45425,
             manualEntries: 0,
             difference: 5,
         };
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
-            // $or: [
-            //     { otpVerified: { $eq: true } },
-            //     { isPrevious: { $eq: true } }
-            // ]
+            $or: [
+                { otpVerified: { $eq: true } },
+                { isPrevious: { $eq: true } }
+            ]
         });
         let challengerProgress = await challangerProgress
             .findOne({ name: "challenge" })
