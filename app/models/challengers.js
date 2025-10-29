@@ -14,6 +14,7 @@ const schema = mongoose.model(
         pdf: { type: String, default: "" },
         otpVerified: { type: Boolean, default: false },
         ip: { type: String, default: "" },
+        referer: { type: String, default: "" },
         isDeleted: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         createdAt: { type: Date, default: Date.now },
