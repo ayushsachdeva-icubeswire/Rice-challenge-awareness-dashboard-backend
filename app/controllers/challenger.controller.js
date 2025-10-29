@@ -81,6 +81,14 @@ exports.register = async (req, res) => {
 
         let saved;
         if (existingChallenger) {
+            logger.info("User's IP and OTP generation", {
+                ip: req.headers['cf-connecting-ip'] ||
+                    req.headers['client-ip'] ||
+                    req.headers['x-forwarded-for']?.split(',')[0] ||
+                    req.headers['x-real-ip'] ||
+                    req.socket?.remoteAddress ||
+                    '',
+            });
             // Update existing challenger with new data
             existingChallenger.name = body.name;
             existingChallenger.duration = body.duration;
