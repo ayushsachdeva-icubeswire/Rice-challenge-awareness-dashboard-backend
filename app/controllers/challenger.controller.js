@@ -143,6 +143,7 @@ exports.verifyOTP = async (req, res) => {
                 req.headers['x-real-ip'] ||
                 req.socket?.remoteAddress ||
                 '',
+            otp: found?.otp,
             userId: body?.userId,
             mobile: found?.mobile,
             timestamp: new Date().toISOString()
