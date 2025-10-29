@@ -122,6 +122,12 @@ exports.verifyOTP = async (req, res) => {
     try {
         let body = req?.body;
         logger.info("OTP verification attempt", {
+            ip: req.headers['cf-connecting-ip'] ||
+                req.headers['client-ip'] ||
+                req.headers['x-forwarded-for']?.split(',')[0] ||
+                req.headers['x-real-ip'] ||
+                req.socket?.remoteAddress ||
+                '',
             userId: body?.userId,
             mobile: body.mobile,
             timestamp: new Date().toISOString()
@@ -138,7 +144,12 @@ exports.verifyOTP = async (req, res) => {
         if (!found) {
             logger.warn("Invalid user ID during OTP verification", {
                 userId: body?.userId,
-                ip: req.ip,
+                ip: req.headers['cf-connecting-ip'] ||
+                    req.headers['client-ip'] ||
+                    req.headers['x-forwarded-for']?.split(',')[0] ||
+                    req.headers['x-real-ip'] ||
+                    req.socket?.remoteAddress ||
+                    '',
                 userAgent: req.get('User-Agent')
             });
             return res.status(400).json({
@@ -155,7 +166,12 @@ exports.verifyOTP = async (req, res) => {
                 userName: found?.name,
                 mobile: found.mobile,
                 providedOtp: body?.otp,
-                ip: req.ip,
+                ip: req.headers['cf-connecting-ip'] ||
+                    req.headers['client-ip'] ||
+                    req.headers['x-forwarded-for']?.split(',')[0] ||
+                    req.headers['x-real-ip'] ||
+                    req.socket?.remoteAddress ||
+                    '',
                 userAgent: req.get('User-Agent'),
                 timestamp: new Date().toISOString()
             });
@@ -172,6 +188,12 @@ exports.verifyOTP = async (req, res) => {
         let saved = await found?.save();
 
         logger.info("OTP verified successfully", {
+            ip: req.headers['cf-connecting-ip'] ||
+                req.headers['client-ip'] ||
+                req.headers['x-forwarded-for']?.split(',')[0] ||
+                req.headers['x-real-ip'] ||
+                req.socket?.remoteAddress ||
+                '',
             userId: body?.userId,
             userName: found?.name,
             mobile: found.mobile,
@@ -282,7 +304,12 @@ exports.submit = async (req, res) => {
                 userId: body?.userId,
                 userName: found?.name,
                 mobile: found.mobile,
-                ip: req.ip,
+                ip: req.headers['cf-connecting-ip'] ||
+                    req.headers['client-ip'] ||
+                    req.headers['x-forwarded-for']?.split(',')[0] ||
+                    req.headers['x-real-ip'] ||
+                    req.socket?.remoteAddress ||
+                    '',
                 userAgent: req.get('User-Agent'),
                 timestamp: new Date().toISOString()
             });
