@@ -86,6 +86,7 @@ exports.register = async (req, res) => {
             existingChallenger.duration = body.duration;
             existingChallenger.countryCode = body.countryCode;
             existingChallenger.otp = otp;
+            existingChallenger.updatedAt = new Date();
             saved = await existingChallenger.save();
         } else {
             // Create new challenger if no existing one found
@@ -167,6 +168,7 @@ exports.verifyOTP = async (req, res) => {
         }
 
         found.otpVerified = true;
+        found.updatedAt = new Date();
         let saved = await found?.save();
 
         logger.info("OTP verified successfully", {
@@ -323,6 +325,7 @@ exports.submit = async (req, res) => {
         found.subcategory = body?.subcategory;
         found.type = body?.type;
         found.pdf = records[0]?.pdf;
+        found.updatedAt = new Date();
         let saved = await found?.save();
         let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
         // await fireTrackingPixel(11032, found?.name, found?.mobile);
@@ -414,49 +417,55 @@ exports.updateEngagement = async (req, res) => {
 
 exports.getEngagement = async (req, res) => {
     try {
-        const lastER = await challangerProgress
-            .findOne({ name: "engagement" })
-            .sort({ createdAt: -1 });
+        // const lastER = await challangerProgress
+        //     .findOne({ name: "engagement" })
+        //     .sort({ createdAt: -1 });
 
-        // Common API call parameters
-        const apiConfig = {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-            params: {
-                "hashtags[0]": "onlydaawatnovember",
-                "hashtags[1]": "onlyricenovember",
-                "hashtags[2]": "riceyourawareness",
-            },
-        };
+        // // Common API call parameters
+        // const apiConfig = {
+        //     headers: {
+        //         Accept: "application/json",
+        //         "Content-Type": "application/json",
+        //     },
+        //     params: {
+        //         "hashtags[0]": "onlydaawatnovember",
+        //         "hashtags[1]": "onlyricenovember",
+        //         "hashtags[2]": "riceyourawareness",
+        //     },
+        // };
 
-        // Fetch external data once
-        const { data: externalData } = await axios.get(
-            "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
-            apiConfig
-        );
+        // // Fetch external data once
+        // const { data: externalData } = await axios.get(
+        //     "https://apis.icubeswire.co/api/v1/campaign-contents/analysis",
+        //     apiConfig
+        // );
 
-        const currentValue = externalData?.total_engagements || 0;
+        // const currentValue = externalData?.total_engagements || 0;
         
-        let newRecord = lastER;
+        // let newRecord = lastER;
 
-        // Only create new record if there's no last record or values are different
-        if (!lastER || currentValue !== lastER.currentValue) {
-            // Prepare insert data
-            const progressData = {
-                name: "engagement",
-                previousValue: lastER ? lastER.currentValue : 0,
-                currentValue,
-                manualEntries: lastER ? currentValue - lastER.currentValue : 0,
-                difference: lastER ? currentValue - lastER.currentValue : 0,
-            };
+        // // Only create new record if there's no last record or values are different
+        // if (!lastER || currentValue !== lastER.currentValue) {
+        //     // Prepare insert data
+        //     const progressData = {
+        //         name: "engagement",
+        //         previousValue: lastER ? lastER.currentValue : 0,
+        //         currentValue,
+        //         manualEntries: lastER ? currentValue - lastER.currentValue : 0,
+        //         difference: lastER ? currentValue - lastER.currentValue : 0,
+        //     };
 
-            // Create new progress record
-            newRecord = await challangerProgress.create(progressData);
-        }
+        //     // Create new progress record
+        //     newRecord = await challangerProgress.create(progressData);
+        // }
 
-
+        const progressData = {
+            name: "engagement",
+            previousValue: 45420,
+            currentValue : 45425,
+            manualEntries: 0,
+            difference: 5,
+        };
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
             // $or: [
@@ -479,7 +488,7 @@ exports.getEngagement = async (req, res) => {
         }
 
         let data = {
-            erProgress: newRecord,
+            erProgress: progressData,
             challengerProgress: challengerProgress,
         };
 
