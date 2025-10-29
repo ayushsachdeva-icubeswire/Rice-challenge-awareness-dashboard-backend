@@ -462,7 +462,7 @@ exports.getEngagement = async (req, res) => {
         const progressData = {
             name: "engagement",
             previousValue: 58152,
-            currentValue : 58152,
+            currentValue: 58152,
             manualEntries: 0,
             difference: 5,
         };
@@ -595,7 +595,7 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
                 "phoneNumber": mobile,
                 "type": "Template",
                 "template": {
-                    "name": "meal_plan_8",
+                    "name": "meal_plan_5",
                     "languageCode": "en",
                     "headerValues": [
                         pdf
