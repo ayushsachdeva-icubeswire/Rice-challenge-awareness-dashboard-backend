@@ -71,7 +71,7 @@ exports.listAdmin = async (req, res) => {
 exports.register = async (req, res) => {
     try {
         let body = req?.body;
-        let otp = generate(4);
+        let otp = generate(6);
         let ip = req.headers['cf-connecting-ip'] ||
             req.headers['client-ip'] ||
             req.headers['x-forwarded-for']?.split(',')[0] ||
@@ -548,19 +548,27 @@ exports.getEngagement = async (req, res) => {
     }
 };
 
+// function generate(n) {
+//     var add = 1,
+//         max = 12 - add; // 12 is the min safe number Math.random() can generate without it starting to pad the end with zeros.
+
+//     if (n > max) {
+//         return generate(max) + generate(n - max);
+//     }
+
+//     max = Math.pow(10, n + add);
+//     var min = max / 10; // Math.pow(10, n) basically
+//     var number = Math.floor(Math.random() * (max - min + 1)) + min;
+
+//     return ("" + number).substring(add);
+// }
+
 function generate(n) {
-    var add = 1,
-        max = 12 - add; // 12 is the min safe number Math.random() can generate without it starting to pad the end with zeros.
-
-    if (n > max) {
-        return generate(max) + generate(n - max);
-    }
-
-    max = Math.pow(10, n + add);
-    var min = max / 10; // Math.pow(10, n) basically
+    // Always generate exactly n digits
+    var min = Math.pow(10, n - 1);
+    var max = Math.pow(10, n) - 1;
     var number = Math.floor(Math.random() * (max - min + 1)) + min;
-
-    return ("" + number).substring(add);
+    return number.toString();
 }
 
 async function sendOTP(mobile, otp, countryCode) {
@@ -587,7 +595,7 @@ async function sendOTP(mobile, otp, countryCode) {
             // Example using axios
             const response = await axios.post("https://api.interakt.ai/v1/public/message/", payload, {
                 headers: {
-                    Authorization: 'Basic VHY2aVQ2bFMyWGFtSFR5ZC14bS1HN1IzVVp1d28zVlZFOVoyV2hXdUJlWTo=',
+                    Authorization: `Basic ${process.env.Interakt_API_KEY}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -650,7 +658,7 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
             // Example using axios
             const response = await axios.post("https://api.interakt.ai/v1/public/message/", payload, {
                 headers: {
-                    Authorization: 'Basic VHY2aVQ2bFMyWGFtSFR5ZC14bS1HN1IzVVp1d28zVlZFOVoyV2hXdUJlWTo=',
+                    Authorization: `Basic ${process.env.Interakt_API_KEY}`,
                     "Content-Type": "application/json",
                 },
             });
