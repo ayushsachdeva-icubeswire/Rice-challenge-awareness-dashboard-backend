@@ -635,7 +635,7 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
                 "phoneNumber": mobile,
                 "type": "Template",
                 "template": {
-                    "name": "meal_plan_8",
+                    "name": "meal_plan_9",
                     "languageCode": "en",
                     "headerValues": [
                         pdf
