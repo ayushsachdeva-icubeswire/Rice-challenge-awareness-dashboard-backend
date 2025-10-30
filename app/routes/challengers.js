@@ -7,7 +7,7 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/challenger", controller.listAdmin);
+  app.get("/api/challenger",[authJwt.verifyToken], controller.listAdmin);
 
   // new user registeration
   /**
