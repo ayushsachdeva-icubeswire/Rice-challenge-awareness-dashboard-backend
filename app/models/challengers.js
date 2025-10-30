@@ -16,6 +16,7 @@ const schema = mongoose.model(
         ip: { type: String, default: "" },
         referer: { type: String, default: "" },
         isDeleted: { type: Boolean, default: false },
+        isPrevious: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
