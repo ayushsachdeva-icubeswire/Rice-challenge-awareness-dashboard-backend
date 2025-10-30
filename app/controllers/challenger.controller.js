@@ -506,17 +506,18 @@ exports.getEngagement = async (req, res) => {
             manualEntries: 0,
             difference: 5,
         };
-        let challengerCount = await Challenger.countDocuments({
-            $and: [
-                { isDeleted: false },
-                {
-                    $or: [
-                        { otpVerified: true },
-                        { isPrevious: true }
-                    ]
-                }
-            ]
-        });
+        let challengerCount = await Challenger.countDocuments(
+            {
+                'isDeleted': false,
+                '$or': [
+                    {
+                        'otpVerified': true
+                    }, {
+                        'isPrevious': true
+                    }
+                ]
+            }
+        );
         let challengerProgress = await challangerProgress
             .findOne({ name: "challenge" })
             .sort({ createdAt: -1 });
