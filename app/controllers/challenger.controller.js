@@ -25,8 +25,8 @@ exports.listAdmin = async (req, res) => {
         if (req.query.duration) filter.duration = req.query.duration;
         if (req.query.category) filter.category = req.query.category;
         if (req.query.subcategory) filter.subcategory = req.query.subcategory;
-        const records = await Challenger.find(filter,{name:1,mobile:1,duration:1,category:1,subcategory:1,type:1,pdf:1,createdAt:1})
-            .sort({ otpVerified:-1, createdAt: -1})
+        const records = await Challenger.find(filter, { name: 1, mobile: 1, duration: 1, category: 1, subcategory: 1, type: 1, pdf: 1, createdAt: 1 })
+            .sort({ otpVerified: -1, createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
@@ -508,10 +508,10 @@ exports.getEngagement = async (req, res) => {
         };
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
-            // $or: [
-            //     { otpVerified: { $eq: true } },
-            //     { isPrevious: { $eq: true } }
-            // ]
+            $or: [
+                { otpVerified: { $eq: true } },
+                { isPrevious: { $eq: true } }
+            ]
         });
         let challengerProgress = await challangerProgress
             .findOne({ name: "challenge" })
