@@ -303,7 +303,11 @@ exports.dashboard = async (req, res) => {
   {
     $match: {
       createdAt: { $exists: true },
-      isDeleted: false
+      isDeleted: false,
+      $or:[
+        { otpVerified: { $eq: true } },
+        { isPrevious: { $eq: true } }
+      ]
     }
   },
   {
