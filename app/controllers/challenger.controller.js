@@ -501,7 +501,7 @@ exports.getEngagement = async (req, res) => {
 
         const progressData = {
             name: "engagement",
-            previousValue: 126200,
+            previousValue: 126195,
             currentValue: 126200,
             manualEntries: 0,
             difference: 5,
