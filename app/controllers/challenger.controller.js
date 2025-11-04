@@ -32,7 +32,10 @@ exports.listAdmin = async (req, res) => {
 
         const total = await Challenger.countDocuments(filter);
         const result = await Challenger.aggregate([
-            { $match: filter },
+            { $match: {...filter, $or: [
+                { otpVerified: { $eq: true } },
+                { isPrevious: { $eq: true } }
+            ] }},
             {
                 $group: {
                     _id: {
