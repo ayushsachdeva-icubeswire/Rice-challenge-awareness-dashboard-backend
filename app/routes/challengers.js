@@ -66,7 +66,8 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/register", csrfProtection, verifyRecaptcha(0.5), controller.register);
+  // app.post("/api/challenger/register", csrfProtection, verifyRecaptcha(0.5), controller.register);
+  app.post("/api/challenger/register", csrfProtection, controller.register);
 
   // Verify OTP
   /**
@@ -113,7 +114,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/verify", csrfProtection, verifyRecaptcha(0.5), controller.verifyOTP);
+  app.post("/api/challenger/verify", csrfProtection, controller.verifyOTP);
 
   /**
    * @swagger
@@ -189,7 +190,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/submit", csrfProtection, verifyRecaptcha(0.5), controller.submit);
+  app.post("/api/challenger/submit", csrfProtection, controller.submit);
 
   app.post("/challenger/update-engagement", csrfProtection, controller.updateEngagement);
 
