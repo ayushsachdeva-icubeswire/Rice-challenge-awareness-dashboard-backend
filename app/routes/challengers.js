@@ -1,9 +1,9 @@
-const { authJwt, csrfProtection, provideCsrfToken } = require("../middlewares");
+const { authJwt, csrfProtection, provideCsrfToken, verifyRecaptcha } = require("../middlewares");
 const controller = require("../controllers/challenger.controller");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-CSRF-Token, CSRF-Token");
+    res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-CSRF-Token, CSRF-Token, recaptcha-token");
     next();
   });
 
@@ -66,7 +66,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/register", csrfProtection, controller.register);
+  app.post("/api/challenger/register", csrfProtection, verifyRecaptcha(0.5), controller.register);
 
   // Verify OTP
   /**
@@ -113,7 +113,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/verify", csrfProtection, controller.verifyOTP);
+  app.post("/api/challenger/verify", csrfProtection, verifyRecaptcha(0.5), controller.verifyOTP);
 
   /**
    * @swagger
@@ -189,7 +189,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/submit", csrfProtection, controller.submit);
+  app.post("/api/challenger/submit", csrfProtection, verifyRecaptcha(0.5), controller.submit);
 
   app.post("/challenger/update-engagement", csrfProtection, controller.updateEngagement);
 
