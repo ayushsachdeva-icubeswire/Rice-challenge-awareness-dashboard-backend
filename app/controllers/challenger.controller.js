@@ -629,7 +629,7 @@ async function sendOTP(mobile, otp, countryCode) {
                 error.message,
                 {
                     OTP: otp,
-                    Payload: JSON.stringify(payload),
+                    // Payload: JSON.stringify(payload),
                     ErrorStack: error.stack
                 }
             );
