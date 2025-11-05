@@ -1,0 +1,199 @@
+const cron = require("node-cron");
+const db = require("../models");
+const Challenger = db.challengers;
+const { sendPlan } = require("./email.service");
+const logger = require("../config/logger.config");
+
+// Helper function to extract number of days from duration string
+const extractDays = (duration) => {
+  const match = duration.match(/(\d+)/);
+  return match ? parseInt(match[0]) : 0;
+};
+
+// Helper function to check if today is a reminder day (7th, 14th, 21st, or 30th)
+const isBulkReminderDay = () => {
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  return [7, 14, 21, 30].includes(dayOfMonth);
+};
+
+// Helper function to check if reminder is needed for post-Nov challengers
+const needsReminder = (challenger, durationDays) => {
+  if (challenger.reminderSent) {
+    return false;
+  }
+
+  const lastUpdate = new Date(challenger.updatedAt);
+  const daysSinceUpdate = Math.floor(
+    (new Date() - lastUpdate) / (1000 * 60 * 60 * 24)
+  );
+  return daysSinceUpdate >= durationDays;
+};
+
+// Process challengers in chunks
+const processChallengers = async (challengers) => {
+  for (const challenger of challengers) {
+    try {
+      await sendPlan(
+        challenger.mobile,
+        challenger.name,
+        challenger.pdf,
+        challenger.pdfFile?.originalName || "meal-plan.pdf",
+        challenger.duration,
+        challenger.countryCode || "+91"
+      );
+
+      // Update the challenger with reminder tracking
+      await Challenger.findByIdAndUpdate(challenger._id, {
+        updatedAt: new Date(),
+        reminderSent: true,
+        lastReminderDate: new Date(),
+        $push: {
+          reminderHistory: {
+            sentAt: new Date(),
+            duration: challenger.duration,
+          },
+        },
+      });
+
+      logger.info("Reminder sent successfully", {
+        challengerId: challenger._id,
+        name: challenger.name,
+        mobile: challenger.mobile,
+        duration: challenger.duration,
+        reminderCount: (challenger.reminderHistory?.length || 0) + 1,
+      });
+    } catch (error) {
+      logger.error("Error sending reminder", {
+        challengerId: challenger._id,
+        error: error.message,
+        stack: error.stack,
+      });
+    }
+  }
+};
+
+// Process post-November challengers (daily check)
+const processPostNovemberChallengers = async () => {
+  try {
+    logger.info("Starting daily reminder cron for post-November challengers");
+
+    const chunkSize = 10;
+    let skip = 0;
+
+    // Base query for post-November challengers
+    const baseQuery = {
+      otpVerified: true,
+      pdf: { $exists: true, $ne: null },
+      createdAt: { $gte: new Date("2025-11-01") },
+      reminderSent: { $ne: true },
+    };
+
+    const totalCount = await Challenger.countDocuments(baseQuery);
+
+    while (skip < totalCount) {
+      const challengers = await Challenger.find(baseQuery)
+        .skip(skip)
+        .limit(chunkSize)
+        .select(
+          "name mobile pdf duration updatedAt countryCode pdfFile reminderSent lastReminderDate reminderHistory"
+        )
+        .lean();
+
+      const eligibleChallengers = challengers.filter((c) =>
+        needsReminder(c, extractDays(c.duration))
+      );
+      await processChallengers(eligibleChallengers);
+
+      skip += chunkSize;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    logger.info("Completed daily reminder cron for post-November challengers", {
+      totalProcessed: totalCount,
+    });
+  } catch (error) {
+    logger.error("Error in post-November reminder cron job", {
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+};
+
+// Process pre-November challengers (on specific dates)
+const processPreNovemberChallengers = async () => {
+  try {
+    if (!isBulkReminderDay()) {
+      logger.info("Not a bulk reminder day, skipping pre-November challengers");
+      return;
+    }
+
+    logger.info("Starting bulk reminder cron for pre-November challengers");
+
+    const chunkSize = 10;
+    let skip = 0;
+
+    // Base query for pre-November challengers
+    const baseQuery = {
+      otpVerified: true,
+      pdf: { $exists: true, $ne: null },
+      createdAt: { $lt: new Date("2025-11-01") },
+    };
+
+    const totalCount = await Challenger.countDocuments(baseQuery);
+
+    while (skip < totalCount) {
+      const challengers = await Challenger.find(baseQuery)
+        .skip(skip)
+        .limit(chunkSize)
+        .select(
+          "name mobile pdf duration updatedAt countryCode pdfFile reminderSent lastReminderDate reminderHistory"
+        )
+        .lean();
+
+      await processChallengers(challengers);
+
+      skip += chunkSize;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    logger.info("Completed bulk reminder cron for pre-November challengers", {
+      totalProcessed: totalCount,
+    });
+  } catch (error) {
+    logger.error("Error in pre-November reminder cron job", {
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+};
+
+// Main cron function
+const startReminderCron = () => {
+  // Run every day at 12:00 AM for both types of reminders
+  cron.schedule(
+    "0 0 * * *",
+    async () => {
+      try {
+        // Process post-November challengers daily
+        await processPostNovemberChallengers();
+
+        // Process pre-November challengers only on specific dates
+        await processPreNovemberChallengers();
+      } catch (error) {
+        logger.error("Error in main cron scheduler", {
+          error: error.message,
+          stack: error.stack,
+        });
+      }
+    },
+    {
+      scheduled: true,
+      timezone: "Asia/Kolkata",
+    }
+  );
+};
+
+module.exports = {
+  startReminderCron,
+};

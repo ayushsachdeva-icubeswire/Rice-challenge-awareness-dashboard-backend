@@ -49,6 +49,7 @@ app.use('/uploads', express.static('uploads'));
 
 const db = require("./app/models");
 const Role = db.role;
+const { startReminderCron } = require('./app/services/cron.service');
 
 db.mongoose
   .connect(`${dbConfig.MONGODBURI}`, {
@@ -58,6 +59,8 @@ db.mongoose
   .then(() => {
     console.log("Successfully connect to MongoDB.");
     initial();
+    // Start the reminder cron job
+    // startReminderCron();
   })
   .catch(err => {
     console.error("Connection error", err);
