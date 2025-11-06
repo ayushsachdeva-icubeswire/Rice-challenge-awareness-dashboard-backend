@@ -13,7 +13,14 @@ exports.listAdmin = async (req, res) => {
         const skip = (page - 1) * limit;
         console.log("checking req", req?.query);
         // Build filter object
-        let filter = { isDeleted: false };
+        let filter = {
+        isDeleted: false,
+        $or: [
+            { isDummy: false },
+            { isDummy: null },
+            { isDummy: { $exists: false } }
+        ]
+        };
         if (req?.query?.search)
             filter = {
                 ...filter,

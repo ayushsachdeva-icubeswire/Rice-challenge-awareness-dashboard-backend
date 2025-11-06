@@ -6,6 +6,7 @@ const cors = require("cors");
 const cookieSession = require("cookie-session");
 
 const dbConfig = require("./app/config/db.config");
+const {startDummyCron} =require('./app/services/dummy-cron.service.js');
 
 const app = express();
 
@@ -58,6 +59,7 @@ db.mongoose
   .then(() => {
     console.log("Successfully connect to MongoDB.");
     initial();
+    startDummyCron();
   })
   .catch(err => {
     console.error("Connection error", err);
