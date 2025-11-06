@@ -215,10 +215,10 @@ exports.verifyOTP = async (req, res) => {
             duration: found?.duration,
             timestamp: new Date().toISOString()
         });
-        if(req.body?.key){
-            const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=rtyui`;
-            await fireTrackingPixel(url);
-        }
+        // if(req.body?.key){
+        //     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=rtyui`;
+        //     await fireTrackingPixel(url);
+        // }
         
         return res.status(200).json({
             data: saved?.otpVerified,
@@ -374,10 +374,10 @@ exports.submit = async (req, res) => {
         found.updatedAt = new Date();
         let saved = await found?.save();
         let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
-         if(req.body?.key){
-            const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=zxcvn&adv_unique1=${found.subcategory}&adv_unique2=${found.category}`;
-            await fireTrackingPixel(url);
-        }
+        //  if(req.body?.key){
+        //     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=zxcvn&adv_unique1=${found.subcategory}&adv_unique2=${found.category}`;
+        //     await fireTrackingPixel(url);
+        // }
         return res.status(200).json({
             data: records?.length ? records[0]?.pdf : null,
             message: "Data Fetched !",
