@@ -2,7 +2,7 @@ const authJwt = require("./authJwt");
 const verifySignUp = require("./verifySignUp");
 const { uploadPDF, uploadPdfConfig, uploadImageConfig, handleUploadError, upload } = require("./upload");
 const { csrfProtection, provideCsrfToken, csrfErrorHandler } = require("./csrf");
-const { verifyRecaptcha } = require("./recaptcha");
+const { verifyRecaptcha, verifyRecaptchaConditional } = require("./recaptcha");
 
 module.exports = {
   authJwt,
@@ -13,5 +13,7 @@ module.exports = {
   csrfProtection,
   provideCsrfToken,
   csrfErrorHandler,
-  verifyRecaptcha
+  verifyRecaptcha,
+  verifyRecaptchaConditional
 };
+
