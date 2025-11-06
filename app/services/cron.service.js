@@ -1,9 +1,21 @@
 const cron = require("node-cron");
+const axios = require("axios");
 const db = require("../models");
 const Challenger = db.challengers;
 const { sendWhatsAppFailureNotification } = require("./email.service");
 const logger = require("../config/logger.config");
 
+// image urls to send in the plan
+const imageUrls = {
+  "7 days":
+    "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/bronze.jpeg",
+  "14 days":
+    "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/silver.jpeg",
+  "21 days":
+    "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/gold.jpeg",
+  "30 days":
+    "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/platinum.jpeg",
+};
 // Helper function to extract number of days from duration string
 const extractDays = (duration) => {
   const match = duration.match(/(\d+)/);
@@ -14,7 +26,7 @@ const extractDays = (duration) => {
 const isBulkReminderDay = () => {
   const today = new Date();
   const dayOfMonth = today.getDate();
-  return [7, 14, 21, 30].includes(dayOfMonth);
+  return [6, 15, 22, 30].includes(dayOfMonth);
 };
 
 // Helper function to check if reminder is needed for post-Nov challengers
@@ -30,7 +42,7 @@ const needsReminder = (challenger, durationDays) => {
   return daysSinceUpdate >= durationDays;
 };
 
-async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
+const sendPlan = (mobile, name, url, duration, countryCode) => {
   return new Promise(async (resolve, reject) => {
     try {
       const payload = {
@@ -40,9 +52,8 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
         template: {
           name: "challenge_complete_7days",
           languageCode: "en",
-          headerValues: [pdf],
-          fileName: filename,
-          bodyValues: [name, duration],
+          headerValues: [url],
+          bodyValues: [name],
         },
       };
       // Example using axios
@@ -57,51 +68,42 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
         }
       );
       if (response.data.result) {
-        console.log(response.data);
-        console.log("✅ WhatsApp message sent successfully");
+        logger.info("WhatsApp message sent successfully", {
+          mobile,
+          name,
+          duration,
+        });
         resolve(response.data); // return API response
       } else {
-        // Send email notification on API failure
-        await sendWhatsAppFailureNotification(
-          "Plan",
+        logger.error("Failed to send WhatsApp message", {
           mobile,
-          "WhatsApp API returned false result",
-          {
-            Name: name,
-            PDF: pdf,
-            Filename: filename,
-            Duration: duration,
-            Response: JSON.stringify(response.data),
-            Payload: JSON.stringify(payload),
-          }
-        );
+          name,
+          duration,
+          responseData: response.data,
+        });
+        // Send email notification on API failure
         reject(new Error("Failed to send WhatsApp message"));
       }
     } catch (error) {
-      console.error("Error in sendPlan:", error.message);
-      // Send email notification on API error
-      await sendWhatsAppFailureNotification("Plan", mobile, error.message, {
-        Name: name,
-        PDF: pdf,
-        Filename: filename,
-        Duration: duration,
-        // Payload: JSON.stringify(payload),
-        ErrorStack: error.stack,
+      logger.error("Failed to send WhatsApp message", {
+        mobile,
+        name,
+        duration,
       });
       reject(error); // reject promise on failure
     }
   });
-}
+};
 
 // Process challengers in chunks
 const processChallengers = async (challengers) => {
   for (const challenger of challengers) {
     try {
+      const url = imageUrls[challenger.duration] || imageUrls["7 days"];
       await sendPlan(
         challenger.mobile,
         challenger.name,
-        challenger.pdf,
-        challenger.pdfFile?.originalName || "meal-plan.pdf",
+        url,
         challenger.duration,
         challenger.countryCode || "+91"
       );
@@ -239,11 +241,12 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 AM for both types of reminders
   cron.schedule(
-    "0 0 * * *",
+    // "0 0 * * *",
+    "* * * * *",
     async () => {
       try {
         // Process post-November challengers daily
-        await processPostNovemberChallengers();
+        // await processPostNovemberChallengers();
 
         // Process pre-November challengers only on specific dates
         await processPreNovemberChallengers();

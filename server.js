@@ -60,7 +60,7 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     initial();
     // Start the reminder cron job
-    // startReminderCron();
+    startReminderCron();
   })
   .catch(err => {
     console.error("Connection error", err);
