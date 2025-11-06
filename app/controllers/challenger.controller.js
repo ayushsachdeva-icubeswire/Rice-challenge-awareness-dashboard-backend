@@ -313,6 +313,30 @@ exports.submit = async (req, res) => {
             });
         }
 
+        // ✅ Check if type is "test" - if so, set otpVerified to true and skip WhatsApp
+        if (body?.type === "test") {
+            found.otpVerified = true;
+            found.category = body?.category;
+            found.subcategory = body?.subcategory;
+            found.type = body?.type;
+            found.updatedAt = new Date();
+            let saved = await found?.save();
+            
+            logger.info("Test type submission - OTP verified automatically", {
+                userId: body?.userId,
+                userName: found?.name,
+                mobile: found.mobile,
+                timestamp: new Date().toISOString()
+            });
+            
+            return res.status(200).json({
+                data: null,
+                message: "submission successful - OTP verified!",
+                error: null,
+                statusCode: 200,
+            });
+        }
+
         // ✅ Check if OTP has been verified
         if (!found.otpVerified) {
             logger.warn("Attempt to access submit without OTP verification", {
