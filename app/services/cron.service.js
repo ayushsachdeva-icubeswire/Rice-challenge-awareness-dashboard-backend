@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const db = require("../models");
 const Challenger = db.challengers;
-const { sendPlan } = require("./email.service");
+const { sendWhatsAppFailureNotification } = require("./email.service");
 const logger = require("../config/logger.config");
 
 // Helper function to extract number of days from duration string
@@ -29,6 +29,69 @@ const needsReminder = (challenger, durationDays) => {
   );
   return daysSinceUpdate >= durationDays;
 };
+
+async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const payload = {
+        countryCode: countryCode,
+        phoneNumber: mobile,
+        type: "Template",
+        template: {
+          name: "challenge_complete_7days",
+          languageCode: "en",
+          headerValues: [pdf],
+          fileName: filename,
+          bodyValues: [name, duration],
+        },
+      };
+      // Example using axios
+      const response = await axios.post(
+        "https://api.interakt.ai/v1/public/message/",
+        payload,
+        {
+          headers: {
+            Authorization: `Basic ${process.env.Interakt_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.data.result) {
+        console.log(response.data);
+        console.log("✅ WhatsApp message sent successfully");
+        resolve(response.data); // return API response
+      } else {
+        // Send email notification on API failure
+        await sendWhatsAppFailureNotification(
+          "Plan",
+          mobile,
+          "WhatsApp API returned false result",
+          {
+            Name: name,
+            PDF: pdf,
+            Filename: filename,
+            Duration: duration,
+            Response: JSON.stringify(response.data),
+            Payload: JSON.stringify(payload),
+          }
+        );
+        reject(new Error("Failed to send WhatsApp message"));
+      }
+    } catch (error) {
+      console.error("Error in sendPlan:", error.message);
+      // Send email notification on API error
+      await sendWhatsAppFailureNotification("Plan", mobile, error.message, {
+        Name: name,
+        PDF: pdf,
+        Filename: filename,
+        Duration: duration,
+        // Payload: JSON.stringify(payload),
+        ErrorStack: error.stack,
+      });
+      reject(error); // reject promise on failure
+    }
+  });
+}
 
 // Process challengers in chunks
 const processChallengers = async (challengers) => {
@@ -137,6 +200,7 @@ const processPreNovemberChallengers = async () => {
     const baseQuery = {
       otpVerified: true,
       pdf: { $exists: true, $ne: null },
+      reminderSent: { $ne: true },
       createdAt: { $lt: new Date("2025-11-01") },
     };
 
@@ -151,7 +215,10 @@ const processPreNovemberChallengers = async () => {
         )
         .lean();
 
-      await processChallengers(challengers);
+      const eligibleChallengers = challengers.filter((c) =>
+        needsReminder(c, extractDays(c.duration))
+      );
+      await processChallengers(eligibleChallengers);
 
       skip += chunkSize;
       await new Promise((resolve) => setTimeout(resolve, 1000));
