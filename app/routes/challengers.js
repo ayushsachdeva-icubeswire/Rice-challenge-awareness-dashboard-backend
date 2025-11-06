@@ -1,4 +1,4 @@
-const { authJwt, csrfProtection, provideCsrfToken, verifyRecaptcha } = require("../middlewares");
+const { authJwt, csrfProtection, provideCsrfToken, verifyRecaptcha, verifyRecaptchaConditional } = require("../middlewares");
 const controller = require("../controllers/challenger.controller");
 
 module.exports = function (app) {
@@ -190,7 +190,7 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/submit", csrfProtection, controller.submit);
+  app.post("/api/challenger/submit", csrfProtection, verifyRecaptchaConditional(0.5), controller.submit);
 
   app.post("/challenger/update-engagement", csrfProtection, controller.updateEngagement);
 
