@@ -77,7 +77,7 @@ module.exports = function (app) {
   app.post(
     "/api/challenger/register",
     csrfProtection,
-    verifyRecaptcha(0.5),
+    verifyRecaptcha(0.5,'register'),
     controller.register
   );
   // app.post("/api/challenger/register", csrfProtection, controller.register);
@@ -130,7 +130,7 @@ module.exports = function (app) {
   app.post(
     "/api/challenger/verify",
     csrfProtection,
-    verifyRecaptcha(0.5),
+    verifyRecaptcha(0.5,'verify_otp'),
     controller.verifyOTP
   );
 
@@ -211,7 +211,7 @@ module.exports = function (app) {
   app.post(
     "/api/challenger/submit",
     csrfProtection,
-    verifyRecaptcha(0.5),
+    verifyRecaptcha(0.5,'submit_challenge'),
     controller.submit
   );
 
