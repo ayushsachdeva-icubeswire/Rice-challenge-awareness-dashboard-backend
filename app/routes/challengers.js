@@ -1,13 +1,21 @@
-const { authJwt, csrfProtection, provideCsrfToken, verifyRecaptcha } = require("../middlewares");
+const {
+  authJwt,
+  csrfProtection,
+  provideCsrfToken,
+  verifyRecaptcha,
+} = require("../middlewares");
 const controller = require("../controllers/challenger.controller");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-CSRF-Token, CSRF-Token, recaptcha-token");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, Content-Type, Accept, X-CSRF-Token, CSRF-Token, recaptcha-token"
+    );
     next();
   });
 
-  app.get("/api/challenger",[authJwt.verifyToken], controller.listAdmin);
+  app.get("/api/challenger", [authJwt.verifyToken], controller.listAdmin);
 
   // new user registeration
   /**
@@ -66,8 +74,13 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  // app.post("/api/challenger/register", csrfProtection, verifyRecaptcha(0.5), controller.register);
-  app.post("/api/challenger/register", csrfProtection, controller.register);
+  app.post(
+    "/api/challenger/register",
+    csrfProtection,
+    verifyRecaptcha(0.5,'register'),
+    controller.register
+  );
+  // app.post("/api/challenger/register", csrfProtection, controller.register);
 
   // Verify OTP
   /**
@@ -114,7 +127,12 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/verify", csrfProtection, controller.verifyOTP);
+  app.post(
+    "/api/challenger/verify",
+    csrfProtection,
+    verifyRecaptcha(0.5,'verify_otp'),
+    controller.verifyOTP
+  );
 
   /**
    * @swagger
@@ -190,9 +208,18 @@ module.exports = function (app) {
    *                     example: 200
    */
 
-  app.post("/api/challenger/submit", csrfProtection, controller.submit);
+  app.post(
+    "/api/challenger/submit",
+    csrfProtection,
+    verifyRecaptcha(0.5,'submit_challenge'),
+    controller.submit
+  );
 
-  app.post("/challenger/update-engagement", csrfProtection, controller.updateEngagement);
+  app.post(
+    "/challenger/update-engagement",
+    csrfProtection,
+    controller.updateEngagement
+  );
 
   app.get("/api/challenger/progress", controller.getEngagement);
   app.get("/api/challenger/v2/progress", controller.getERValue);
