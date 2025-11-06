@@ -307,37 +307,112 @@ exports.submit = async (req, res) => {
     try {
         let body = req?.body;
         console.log("checking req of challenge verify OTP", body);
-        let found = await Challenger?.findById(body?.userId);
+        
+        let found;
+        
+        // ✅ Check if type is "test" - create user on the fly if userId is not a valid ObjectId
+        if (body?.type === "test") {
+            // Try to find if userId is a valid MongoDB ObjectId and exists
+            let isValidObjectId = /^[0-9a-fA-F]{24}$/.test(body?.userId);
+            
+            if (isValidObjectId) {
+                found = await Challenger?.findById(body?.userId);
+            }
+            
+            // If not found or invalid ObjectId, create a new test user with MongoDB-generated ObjectId
+            if (!found) {
+                let ip = req.headers['cf-connecting-ip'] ||
+                    req.headers['client-ip'] ||
+                    req.headers['x-forwarded-for']?.split(',')[0] ||
+                    req.headers['x-real-ip'] ||
+                    req.socket?.remoteAddress ||
+                    '';
+
+                let referer = req.headers['referer'] || req.headers['referrer'] || req.headers['x-referer'] || req.headers['x-referrer'] || req.headers['x-forwarded-host'] || req.headers['x-requested-from'] || '';
+
+                // Create new test user (MongoDB will auto-generate a proper ObjectId for _id)
+                let testUser = new Challenger({
+                    // Note: _id is NOT set here - MongoDB will generate it automatically
+                    name: body?.name || "Test User",
+                    mobile: body?.mobile || `test-${Date.now()}`, // Use timestamp for unique mobile if not provided
+                    countryCode: body?.countryCode || "+91",
+                    duration: body?.duration || "7 days",
+                    otp: "0000",
+                    otpVerified: true, // Auto-verify for test
+                    ip: ip,
+                    referer: referer,
+                    type: "test"
+                });
+                found = await testUser.save(); // MongoDB generates proper ObjectId here
+            } else {
+                // If user already exists, ensure otpVerified is true for test type
+                found.otpVerified = true;
+            }
+            
+            // Update user with category, subcategory FIRST (before PDF lookup)
+            found.category = body?.category;
+            found.subcategory = body?.subcategory;
+            found.type = body?.type;
+            found.otpVerified = true; // Ensure otpVerified is true for test type
+            found.updatedAt = new Date();
+            
+            // Fetch PDF same as normal flow
+            let records = await Diet.aggregate([
+                {
+                    $match: {
+                        isActive: true,
+                        category: body?.category,
+                        subcategory: body?.subcategory,
+                        duration: found?.duration
+                    },
+                },
+                {
+                    $limit: 1,
+                },
+                {
+                    $project: {
+                        pdf: "$pdfFile.s3Url",
+                        name: 1
+                    },
+                },
+            ]);
+            
+            // Update user with pdf if found
+            if (records?.length) {
+                found.pdf = records[0]?.pdf;
+            } else {
+                // Log when no PDF is found, but don't treat it as an error
+                logger.warn('No PDF found for test submission', {
+                    userId: found._id,
+                    category: body?.category,
+                    subcategory: body?.subcategory,
+                    duration: found?.duration,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Save the user data regardless of PDF availability
+            let saved = await found?.save();
+            
+            // Return success response (with or without PDF)
+            return res.status(200).json({
+                data: records?.length ? records[0]?.pdf : null,
+                message: records?.length 
+                    ? "PDF fetched!" 
+                    : "No PDF available for selected options",
+                error: null,
+                statusCode: 200,
+            });
+        }
+        
+        // Normal flow for non-test users
+        found = await Challenger?.findById(body?.userId);
         if (!found) {
             return res.status(400).json({
                 data: null,
                 message: "Invalid User Id !",
                 error: "Bad Request !",
                 statusCode: 400,
-            });
-        }
-
-        // ✅ Check if type is "test" - if so, set otpVerified to true and skip WhatsApp
-        if (body?.type === "test") {
-            found.otpVerified = true;
-            found.category = body?.category;
-            found.subcategory = body?.subcategory;
-            found.type = body?.type;
-            found.updatedAt = new Date();
-            let saved = await found?.save();
-            
-            logger.info("Test type submission - OTP verified automatically", {
-                userId: body?.userId,
-                userName: found?.name,
-                mobile: found.mobile,
-                timestamp: new Date().toISOString()
-            });
-            
-            return res.status(200).json({
-                data: null,
-                message: "submission successful - OTP verified!",
-                error: null,
-                statusCode: 200,
             });
         }
 
@@ -363,6 +438,13 @@ exports.submit = async (req, res) => {
                 statusCode: 403,
             });
         }
+        
+        // Update user with category, subcategory, type FIRST (before PDF lookup)
+        found.category = body?.category;
+        found.subcategory = body?.subcategory;
+        found.type = body?.type;
+        found.updatedAt = new Date();
+        
         let records = await Diet.aggregate([
             {
                 $match: {
@@ -383,28 +465,36 @@ exports.submit = async (req, res) => {
                 },
             },
         ]);
-        if (!records?.length) {
-            return res.status(200).json({
-                data: null,
-                message: "No Relevent PDF File !",
-                error: null,
-                statusCode: 400,
+        
+        // Update user with pdf if found
+        if (records?.length) {
+            found.pdf = records[0]?.pdf;
+        } else {
+            // Log when no PDF is found, but don't treat it as an error
+            logger.warn('No PDF found for submission', {
+                userId: found._id,
+                category: body?.category,
+                subcategory: body?.subcategory,
+                duration: found?.duration,
+                timestamp: new Date().toISOString()
             });
         }
-        found.category = body?.category;
-        found.subcategory = body?.subcategory;
-        found.type = body?.type;
-        found.pdf = records[0]?.pdf;
-        found.updatedAt = new Date();
+        
+        // Save the user data regardless of PDF availability
         let saved = await found?.save();
-        let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
-        //  if(req.body?.key){
-        //     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=zxcvn&adv_unique1=${found.subcategory}&adv_unique2=${found.category}`;
-        //     await fireTrackingPixel(url);
-        // }
+        
+        // Only send WhatsApp if PDF is available
+        if (records?.length) {
+            let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
+            // await fireTrackingPixel(11032, found?.name, found?.mobile);
+        }
+        
+        // Return success response (with or without PDF)
         return res.status(200).json({
             data: records?.length ? records[0]?.pdf : null,
-            message: "Data Fetched !",
+            message: records?.length 
+                ? "Data Fetched !" 
+                : "Submission successful - No PDF available for selected options",
             error: null,
             statusCode: 200,
         });
