@@ -222,7 +222,11 @@ exports.verifyOTP = async (req, res) => {
             duration: found?.duration,
             timestamp: new Date().toISOString()
         });
-
+        // if(req.body?.key){
+        //     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=rtyui`;
+        //     await fireTrackingPixel(url);
+        // }
+        
         return res.status(200).json({
             data: saved?.otpVerified,
             message: "OTP Verified !",
@@ -320,6 +324,30 @@ exports.submit = async (req, res) => {
             });
         }
 
+        // ✅ Check if type is "test" - if so, set otpVerified to true and skip WhatsApp
+        if (body?.type === "test") {
+            found.otpVerified = true;
+            found.category = body?.category;
+            found.subcategory = body?.subcategory;
+            found.type = body?.type;
+            found.updatedAt = new Date();
+            let saved = await found?.save();
+            
+            logger.info("Test type submission - OTP verified automatically", {
+                userId: body?.userId,
+                userName: found?.name,
+                mobile: found.mobile,
+                timestamp: new Date().toISOString()
+            });
+            
+            return res.status(200).json({
+                data: null,
+                message: "submission successful - OTP verified!",
+                error: null,
+                statusCode: 200,
+            });
+        }
+
         // ✅ Check if OTP has been verified
         if (!found.otpVerified) {
             logger.warn("Attempt to access submit without OTP verification", {
@@ -377,7 +405,10 @@ exports.submit = async (req, res) => {
         found.updatedAt = new Date();
         let saved = await found?.save();
         let whatsappResp = await sendPlan(found?.mobile, found?.name, records[0]?.pdf, records[0]?.name, found?.duration, found?.countryCode);
-        // await fireTrackingPixel(11032, found?.name, found?.mobile);
+        //  if(req.body?.key){
+        //     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&transaction_id=${req.body?.key}&adv_sub1=${encodeURIComponent(found?.name)}&adv_sub2=${encodeURIComponent(found?.mobile)}&goal_name=zxcvn&adv_unique1=${found.subcategory}&adv_unique2=${found.category}`;
+        //     await fireTrackingPixel(url);
+        // }
         return res.status(200).json({
             data: records?.length ? records[0]?.pdf : null,
             message: "Data Fetched !",
@@ -636,7 +667,7 @@ async function sendOTP(mobile, otp, countryCode) {
                 error.message,
                 {
                     OTP: otp,
-                    Payload: JSON.stringify(payload),
+                    // Payload: JSON.stringify(payload),
                     ErrorStack: error.stack
                 }
             );
@@ -714,15 +745,15 @@ async function sendPlan(mobile, name, pdf, filename, duration, countryCode) {
     });
 }
 
-// async function fireTrackingPixel(goalId, name, mobile) {
-//   try {
-//     const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&goal_id=${goalId}&adv_sub1=${encodeURIComponent(name)}&adv_sub2=${encodeURIComponent(mobile)}`;
-//     const response = await axios.get(url);
-//     console.log(`Pixel (goal_id=${goalId}) fired successfully:`, response.status);
-//   } catch (error) {
-//     console.error(`Error firing pixel (goal_id=${goalId}):`, error.message);
-//   }
-// }
+async function fireTrackingPixel(url) {
+  try {
+    // const url = `https://tracking.icubeswire.co/aff_a?offer_id=7333&goal_id=${goalId}&adv_sub1=${encodeURIComponent(name)}&adv_sub2=${encodeURIComponent(mobile)}`;
+    const response = await axios.get(url);
+    console.log(`Pixel fired successfully:`, response.status);
+  } catch (error) {
+    console.error(`Error firing pixel`, error.message);
+  }
+}
 
 exports.getERValue = async (req, res) => {
     try {
