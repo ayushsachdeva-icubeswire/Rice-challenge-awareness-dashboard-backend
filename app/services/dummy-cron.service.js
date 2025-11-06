@@ -20,12 +20,22 @@ const createDummyChallenger = async () => {
   }
 };
 
-const startDummyCron = () => {
-  // Schedule cron job to run every 45 seconds
-  cron.schedule("*/45 * * * * *", async () => {
-    console.log("Running cron job to create dummy challenger...");
+const scheduleNextChallenger = () => {
+  // Random interval between 30-90 seconds (avg ~51 seconds = ~70 per hour)
+  const minDelay = 30 * 1000; // 30 seconds
+  const maxDelay = 90 * 1000; // 90 seconds
+  const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+  setTimeout(async () => {
+    console.log("Creating dummy challenger with realistic timing...");
     await createDummyChallenger();
-  });
+    scheduleNextChallenger(); // Schedule the next one
+  }, randomDelay);
+};
+
+const startDummyCron = () => {
+  console.log("Starting realistic dummy challenger creation (target: ~70/hour)");
+  scheduleNextChallenger();
 };
 
 module.exports = {
