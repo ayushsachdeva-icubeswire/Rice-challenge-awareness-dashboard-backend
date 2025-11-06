@@ -18,6 +18,7 @@ const schema = mongoose.model(
         isDeleted: { type: Boolean, default: false },
         isPrevious: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
+        reminderSent: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
     })

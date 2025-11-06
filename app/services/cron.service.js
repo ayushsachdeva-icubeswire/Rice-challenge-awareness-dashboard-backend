@@ -2,7 +2,6 @@ const cron = require("node-cron");
 const axios = require("axios");
 const db = require("../models");
 const Challenger = db.challengers;
-const { sendWhatsAppFailureNotification } = require("./email.service");
 const logger = require("../config/logger.config");
 
 // image urls to send in the plan
@@ -26,7 +25,7 @@ const extractDays = (duration) => {
 const isBulkReminderDay = () => {
   const today = new Date();
   const dayOfMonth = today.getDate();
-  return [6, 15, 22, 30].includes(dayOfMonth);
+  return [8, 15, 22, 30].includes(dayOfMonth);
 };
 
 // Helper function to check if reminder is needed for post-Nov challengers
@@ -72,6 +71,7 @@ const sendPlan = (mobile, name, url, duration, countryCode) => {
           mobile,
           name,
           duration,
+          responseData: response.data,
         });
         resolve(response.data); // return API response
       } else {
@@ -112,13 +112,6 @@ const processChallengers = async (challengers) => {
       await Challenger.findByIdAndUpdate(challenger._id, {
         updatedAt: new Date(),
         reminderSent: true,
-        lastReminderDate: new Date(),
-        $push: {
-          reminderHistory: {
-            sentAt: new Date(),
-            duration: challenger.duration,
-          },
-        },
       });
 
       logger.info("Reminder sent successfully", {
@@ -150,7 +143,7 @@ const processPostNovemberChallengers = async () => {
     const baseQuery = {
       otpVerified: true,
       pdf: { $exists: true, $ne: null },
-      createdAt: { $gte: new Date("2025-11-01") },
+      updatedAt: { $gte: new Date("2025-11-01") },
       reminderSent: { $ne: true },
     };
 
@@ -203,7 +196,7 @@ const processPreNovemberChallengers = async () => {
       otpVerified: true,
       pdf: { $exists: true, $ne: null },
       reminderSent: { $ne: true },
-      createdAt: { $lt: new Date("2025-11-01") },
+      updatedAt: { $lt: new Date("2025-11-01") },
     };
 
     const totalCount = await Challenger.countDocuments(baseQuery);
@@ -213,7 +206,7 @@ const processPreNovemberChallengers = async () => {
         .skip(skip)
         .limit(chunkSize)
         .select(
-          "name mobile pdf duration updatedAt countryCode pdfFile reminderSent lastReminderDate reminderHistory"
+          "name mobile pdf duration updatedAt createdAt countryCode pdfFile reminderSent"
         )
         .lean();
 
@@ -241,12 +234,11 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 AM for both types of reminders
   cron.schedule(
-    // "0 0 * * *",
-    "* * * * *",
+    "0 0 * * *",
     async () => {
       try {
         // Process post-November challengers daily
-        // await processPostNovemberChallengers();
+        await processPostNovemberChallengers();
 
         // Process pre-November challengers only on specific dates
         await processPreNovemberChallengers();
