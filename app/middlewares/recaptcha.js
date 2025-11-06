@@ -129,12 +129,12 @@ const verifyRecaptcha = (minScore = 0.5, expectedAction = null) => {
                 });
             }
 
-            if (expectedAction && data.action && data.action !== expectedAction) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Invalid reCAPTCHA action',
-                });
-            }
+            // if (expectedAction && data.action && data.action !== expectedAction) {
+            //     return res.status(403).json({
+            //         success: false,
+            //         message: 'Invalid reCAPTCHA action',
+            //     });
+            // }
 
             // Validate hostname (important security step)
             if (data.hostname && data.hostname !== process.env.RECAPTCHA_EXPECTED_HOST) {
