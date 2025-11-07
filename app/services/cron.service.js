@@ -188,7 +188,7 @@ const processPostNovemberChallengers = async () => {
 
     const baseQuery = {
       otpVerified: true,
-      pdf: { $exists: true, $ne: null },
+      pdf: { $exists: true, $ne: null, $ne: "" },
       updatedAt: { $gte: new Date("2025-11-01") },
       reminderSent: { $ne: true },
     };
@@ -258,7 +258,7 @@ const processPreNovemberChallengers = async () => {
 
     const baseQuery = {
       otpVerified: true,
-      pdf: { $exists: true, $ne: null },
+      pdf: { $exists: true, $ne: null, $ne: "" },
       reminderSent: { $ne: true },
       // TODO:: to discuss with team
       updatedAt: { $lt: new Date("2025-11-01") },
