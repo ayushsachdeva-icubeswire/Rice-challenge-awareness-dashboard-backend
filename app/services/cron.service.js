@@ -66,8 +66,9 @@ const needsReminder = (challenger, durationDays) => {
   return daysSinceUpdate >= durationDays;
 };
 
-const sendPlan = (mobile, name, url, duration, countryCode) => {
+const sendPlan = (challenger, url) => {
   return new Promise(async (resolve, reject) => {
+    const { mobile, name, duration, countryCode } = challenger;
     try {
       const payload = {
         countryCode: countryCode,
@@ -98,6 +99,26 @@ const sendPlan = (mobile, name, url, duration, countryCode) => {
           duration,
           responseData: response.data,
         });
+
+        // Create notification log
+        try {
+          const notificationLog = new db.notificationLog({
+            challenger_id: challenger._id, // We'll need to pass challenger object to sendPlan
+            mobile: mobile,
+            duration: duration,
+            response_data: response.data,
+            response_id: response.data.id ?? "",
+          });
+          await notificationLog.save();
+        } catch (logError) {
+          logger.error("Error saving notification log", {
+            error: logError.message,
+            mobile,
+            duration,
+            challengerId: challenger._id,
+          });
+        }
+
         resolve(response.data); // return API response
       } else {
         logger.error("Failed to send WhatsApp message", {
@@ -126,11 +147,11 @@ const processChallengers = async (challengers) => {
     try {
       const url = imageUrls[challenger.duration] || imageUrls["7 days"];
       await sendPlan(
-        challenger.mobile,
-        challenger.name,
-        url,
-        challenger.duration,
-        challenger.countryCode || "+91"
+        {
+          ...challenger,
+          countryCode: challenger.countryCode || "+91",
+        },
+        url
       );
 
       // Update the challenger with reminder tracking
