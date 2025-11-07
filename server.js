@@ -61,8 +61,13 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     initial();
     // Start the reminder cron job
-    startReminderCron();
-    startDummyCron();
+    if(process.env.CRON_ENV === 'production'){
+      console.log("Starting Reminder Cron Job in production mode.");
+      startReminderCron();
+      startDummyCron();
+    } else {
+      console.log("Skipping Reminder Cron Job in non-production mode.");
+    }
   })
   .catch(err => {
     console.error("Connection error", err);
