@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const axios = require("axios");
 const db = require("../models");
 const Challenger = db.challengers;
+const NotificationLog = db.notificationLog;
 const logger = require("../config/logger.config");
 
 // image urls to send in the plan
@@ -102,7 +103,7 @@ const sendPlan = (challenger, url) => {
 
         // Create notification log
         try {
-          const notificationLog = new db.notificationLog({
+          const notificationLog = new NotificationLog({
             challenger_id: challenger._id, // We'll need to pass challenger object to sendPlan
             mobile: mobile,
             duration: duration,
