@@ -15,20 +15,25 @@ exports.listAdmin = async (req, res) => {
         // Build filter object
         let filter = {
         isDeleted: false,
-        $or: [
-            { isDummy: false },
-            { isDummy: null },
-            { isDummy: { $exists: false } }
-        ]
+            $or: [
+                { isDummy: false },
+                { isDummy: null },
+                { isDummy: { $exists: false } }
+            ]
         };
-        if (req?.query?.search)
+        if (req?.query?.search){
             filter = {
-                ...filter,
-                $or: [
-                    { name: { $regex: req?.query?.search, $options: "i" } },
-                    { mobile: { $regex: req?.query?.search, $options: "i" } },
-                ],
+                $and: [
+                filter, // keep previous filter
+                {
+                    $or: [
+                                { name: { $regex: req?.query?.search, $options: "i" } },
+                                { mobile: { $regex: req?.query?.search, $options: "i" } },
+                            ],
+                }
+                ]
             };
+        }
         if (req.query.duration) filter.duration = req.query.duration;
         if (req.query.category) filter.category = req.query.category;
         if (req.query.subcategory) filter.subcategory = req.query.subcategory;
