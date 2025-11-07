@@ -147,16 +147,29 @@ const processPostNovemberChallengers = async () => {
       reminderSent: { $ne: true },
     };
 
-    const totalCount = await Challenger.countDocuments(baseQuery);
+    // Get unique mobile numbers with their latest records
+    const uniqueChallengers = await Challenger.aggregate([
+      { $match: baseQuery },
+      {
+        $sort: {
+          mobile: 1, // Sort by mobile first
+          updatedAt: -1, // Then by updatedAt in descending order
+        },
+      },
+      {
+        $group: {
+          _id: "$mobile",
+          doc: { $first: "$$ROOT" }, // Get the first (latest) document for each mobile
+        },
+      },
+      { $replaceRoot: { newRoot: "$doc" } }, // Replace root to get back the original document structure
+    ]);
+
+    const totalCount = uniqueChallengers.length;
+    const allChallengers = uniqueChallengers; // Store all challengers
 
     while (skip < totalCount) {
-      const challengers = await Challenger.find(baseQuery)
-        .skip(skip)
-        .limit(chunkSize)
-        .select(
-          "name mobile pdf duration updatedAt countryCode pdfFile reminderSent lastReminderDate reminderHistory"
-        )
-        .lean();
+      const challengers = allChallengers.slice(skip, skip + chunkSize);
 
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
@@ -199,16 +212,29 @@ const processPreNovemberChallengers = async () => {
       updatedAt: { $lt: new Date("2025-11-01") },
     };
 
-    const totalCount = await Challenger.countDocuments(baseQuery);
+    // Get unique mobile numbers with their latest records
+    const uniqueChallengers = await Challenger.aggregate([
+      { $match: baseQuery },
+      {
+        $sort: {
+          mobile: 1, // Sort by mobile first
+          updatedAt: -1, // Then by updatedAt in descending order
+        },
+      },
+      {
+        $group: {
+          _id: "$mobile",
+          doc: { $first: "$$ROOT" }, // Get the first (latest) document for each mobile
+        },
+      },
+      { $replaceRoot: { newRoot: "$doc" } }, // Replace root to get back the original document structure
+    ]);
+
+    const totalCount = uniqueChallengers.length;
+    const allChallengers = uniqueChallengers; // Store all challengers
 
     while (skip < totalCount) {
-      const challengers = await Challenger.find(baseQuery)
-        .skip(skip)
-        .limit(chunkSize)
-        .select(
-          "name mobile pdf duration updatedAt createdAt countryCode pdfFile reminderSent"
-        )
-        .lean();
+      const challengers = allChallengers.slice(skip, skip + chunkSize);
 
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
