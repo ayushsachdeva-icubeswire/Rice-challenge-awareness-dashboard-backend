@@ -15,6 +15,13 @@ const imageUrls = {
   "30 days":
     "https://daawat-rice-challenge.s3.ap-south-1.amazonaws.com/badge/platinum.jpeg",
 };
+
+const template = {
+  "7 days": "challenge_complete_7days",
+  "14 days": "challenge_complete_14days",
+  "21 days": "challenge_complete_21days",
+  "30 days": "challenge_complete_30days",
+};
 // Helper function to extract number of days from duration string
 const extractDays = (duration) => {
   const match = duration.match(/(\d+)/);
@@ -39,7 +46,11 @@ const isBulkReminderDay = () => {
   // Check if it's 1st and previous month didn't have 31 days
   if (dayOfMonth === 1) {
     const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+    const lastDayOfPrevMonth = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      0
+    ).getDate();
     return lastDayOfPrevMonth < 31;
   }
 
@@ -63,7 +74,7 @@ const sendPlan = (mobile, name, url, duration, countryCode) => {
         phoneNumber: mobile,
         type: "Template",
         template: {
-          name: "challenge_complete_7days",
+          name: template[duration] || template["7 days"],
           languageCode: "en",
           headerValues: [url],
           bodyValues: [name],
