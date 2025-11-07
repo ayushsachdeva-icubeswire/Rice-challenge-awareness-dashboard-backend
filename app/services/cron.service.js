@@ -21,19 +21,33 @@ const extractDays = (duration) => {
   return match ? parseInt(match[0]) : 0;
 };
 
-// Helper function to check if today is a reminder day (7th, 14th, 21st, or 30th)
+// Helper function to check if today is a reminder day (8th, 15th, 22nd, 31st or 1st)
 const isBulkReminderDay = () => {
   const today = new Date();
   const dayOfMonth = today.getDate();
-  return [8, 15, 22, 30].includes(dayOfMonth);
+
+  // Always process on 8th, 15th, and 22nd
+  if ([8, 15, 22].includes(dayOfMonth)) {
+    return true;
+  }
+
+  // For 31st or 1st (if previous month didn't have 31 days)
+  if (dayOfMonth === 31) {
+    return true;
+  }
+
+  // Check if it's 1st and previous month didn't have 31 days
+  if (dayOfMonth === 1) {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+    return lastDayOfPrevMonth < 31;
+  }
+
+  return false;
 };
 
 // Helper function to check if reminder is needed for post-Nov challengers
 const needsReminder = (challenger, durationDays) => {
-  if (challenger.reminderSent) {
-    return false;
-  }
-
   const lastUpdate = new Date(challenger.updatedAt);
   const daysSinceUpdate = Math.floor(
     (new Date() - lastUpdate) / (1000 * 60 * 60 * 24)
@@ -213,6 +227,7 @@ const processPreNovemberChallengers = async () => {
       otpVerified: true,
       pdf: { $exists: true, $ne: null },
       reminderSent: { $ne: true },
+      // TODO:: to discuss with team
       updatedAt: { $lt: new Date("2025-11-01") },
     };
 
@@ -263,9 +278,9 @@ const processPreNovemberChallengers = async () => {
 
 // Main cron function
 const startReminderCron = () => {
-  // Run every day at 12:00 AM for both types of reminders
+  // Run every day at 12:00 PM for both types of reminders
   cron.schedule(
-    "0 0 * * *",
+    "0 12 * * *",
     async () => {
       try {
         // Process post-November challengers daily
