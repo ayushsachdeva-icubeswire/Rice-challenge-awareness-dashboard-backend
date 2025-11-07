@@ -136,10 +136,9 @@ const processPostNovemberChallengers = async () => {
   try {
     logger.info("Starting daily reminder cron for post-November challengers");
 
-    const chunkSize = 10;
+    const chunkSize = 100; // You can tune this depending on memory / performance
     let skip = 0;
 
-    // Base query for post-November challengers
     const baseQuery = {
       otpVerified: true,
       pdf: { $exists: true, $ne: null },
@@ -147,42 +146,47 @@ const processPostNovemberChallengers = async () => {
       reminderSent: { $ne: true },
     };
 
-    // Get unique mobile numbers with their latest records
-    const uniqueChallengers = await Challenger.aggregate([
-      { $match: baseQuery },
-      {
-        $sort: {
-          mobile: 1, // Sort by mobile first
-          updatedAt: -1, // Then by updatedAt in descending order
+    let hasMore = true;
+    while (hasMore) {
+      // Paginated aggregation to fetch limited unique challengers
+      const challengers = await Challenger.aggregate([
+        { $match: baseQuery },
+        {
+          $sort: {
+            mobile: 1,
+            updatedAt: -1,
+          },
         },
-      },
-      {
-        $group: {
-          _id: "$mobile",
-          doc: { $first: "$$ROOT" }, // Get the first (latest) document for each mobile
+        {
+          $group: {
+            _id: "$mobile",
+            doc: { $first: "$$ROOT" },
+          },
         },
-      },
-      { $replaceRoot: { newRoot: "$doc" } }, // Replace root to get back the original document structure
-    ]);
+        { $replaceRoot: { newRoot: "$doc" } },
+        { $skip: skip },
+        { $limit: chunkSize },
+      ]);
 
-    const totalCount = uniqueChallengers.length;
-    const allChallengers = uniqueChallengers; // Store all challengers
+      if (!challengers.length) {
+        hasMore = false;
+        break;
+      }
 
-    while (skip < totalCount) {
-      const challengers = allChallengers.slice(skip, skip + chunkSize);
-
+      // Filter eligible challengers and process
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
       );
+
       await processChallengers(eligibleChallengers);
 
       skip += chunkSize;
+
+      // Optional: small delay to reduce DB load
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    logger.info("Completed daily reminder cron for post-November challengers", {
-      totalProcessed: totalCount,
-    });
+    logger.info("Completed daily reminder cron for post-November challengers");
   } catch (error) {
     logger.error("Error in post-November reminder cron job", {
       error: error.message,
@@ -201,10 +205,10 @@ const processPreNovemberChallengers = async () => {
 
     logger.info("Starting bulk reminder cron for pre-November challengers");
 
-    const chunkSize = 10;
+    const chunkSize = 100; // you can adjust based on memory/performance
     let skip = 0;
+    let hasMore = true;
 
-    // Base query for pre-November challengers
     const baseQuery = {
       otpVerified: true,
       pdf: { $exists: true, $ne: null },
@@ -212,42 +216,43 @@ const processPreNovemberChallengers = async () => {
       updatedAt: { $lt: new Date("2025-11-01") },
     };
 
-    // Get unique mobile numbers with their latest records
-    const uniqueChallengers = await Challenger.aggregate([
-      { $match: baseQuery },
-      {
-        $sort: {
-          mobile: 1, // Sort by mobile first
-          updatedAt: -1, // Then by updatedAt in descending order
+    while (hasMore) {
+      // Paginated aggregation directly at DB level
+      const challengers = await Challenger.aggregate([
+        { $match: baseQuery },
+        {
+          $sort: {
+            mobile: 1,
+            updatedAt: -1,
+          },
         },
-      },
-      {
-        $group: {
-          _id: "$mobile",
-          doc: { $first: "$$ROOT" }, // Get the first (latest) document for each mobile
+        {
+          $group: {
+            _id: "$mobile",
+            doc: { $first: "$$ROOT" },
+          },
         },
-      },
-      { $replaceRoot: { newRoot: "$doc" } }, // Replace root to get back the original document structure
-    ]);
+        { $replaceRoot: { newRoot: "$doc" } },
+        { $skip: skip },
+        { $limit: chunkSize },
+      ]);
 
-    const totalCount = uniqueChallengers.length;
-    const allChallengers = uniqueChallengers; // Store all challengers
-
-    while (skip < totalCount) {
-      const challengers = allChallengers.slice(skip, skip + chunkSize);
+      if (!challengers.length) {
+        hasMore = false;
+        break;
+      }
 
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
       );
+
       await processChallengers(eligibleChallengers);
 
       skip += chunkSize;
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    logger.info("Completed bulk reminder cron for pre-November challengers", {
-      totalProcessed: totalCount,
-    });
+    logger.info("Completed bulk reminder cron for pre-November challengers");
   } catch (error) {
     logger.error("Error in pre-November reminder cron job", {
       error: error.message,
