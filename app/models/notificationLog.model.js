@@ -11,8 +11,20 @@ const NotificationLogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    country_code: {
+      type: String,
+      required: true,
+    },
     duration: {
       type: String,
+      required: true,
+    },
+    duration_actual: {
+      type: Number,
+      required: true,
+    },
+    payload: {
+      type: Object,
       required: true,
     },
     response_data: {

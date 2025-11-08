@@ -106,7 +106,10 @@ const sendPlan = (challenger, url) => {
           const notificationLog = new NotificationLog({
             challenger_id: challenger._id, // We'll need to pass challenger object to sendPlan
             mobile: mobile,
+            country_code: countryCode,
             duration: duration,
+            duration_actual: extractDays(duration),
+            payload: payload,
             response_data: response.data,
             response_id: response.data.id ?? "",
           });
@@ -576,18 +579,17 @@ const processPreNovemberChallengers = async () => {
       const challengers = await Challenger.aggregate([
         { $match: baseQuery },
         {
-          $sort: {
-            mobile: 1,
-            createdAt: -1,
-          },
-        },
-        {
           $group: {
             _id: "$mobile",
             doc: { $first: "$$ROOT" },
           },
         },
         { $replaceRoot: { newRoot: "$doc" } },
+        {
+          $sort: {
+            createdAt: 1,
+          },
+        },
         // { $skip: skip },
         { $limit: 5 },
       ]);
@@ -596,7 +598,6 @@ const processPreNovemberChallengers = async () => {
       //   hasMore = false;
       //   break;
       // }
-
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
       );
@@ -620,7 +621,7 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 PM for both types of reminders
   cron.schedule(
-    "0 12 * * *",
+    "39 12 * * *",
     async () => {
       try {
         // Process post-November challengers daily
