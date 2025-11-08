@@ -158,11 +158,14 @@ const processChallengers = async (challengers) => {
         url
       );
 
-      // Update the challenger with reminder tracking
-      await Challenger.findByIdAndUpdate(challenger._id, {
-        updatedAt: new Date(),
-        reminderSent: true,
-      });
+      // Update all records with the same mobile number
+      await Challenger.updateMany(
+        { mobile: challenger.mobile },
+        {
+          updatedAt: new Date(),
+          reminderSent: true
+        }
+      );
 
       logger.info("Reminder sent successfully", {
         challengerId: challenger._id,
@@ -591,7 +594,7 @@ const processPreNovemberChallengers = async () => {
           },
         },
         // { $skip: skip },
-        { $limit: 5 },
+        // { $limit: 5 },
       ]);
 
       // if (!challengers.length) {
@@ -601,7 +604,9 @@ const processPreNovemberChallengers = async () => {
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
       );
-
+      console.log("challengers.length", JSON.stringify(eligibleChallengers.length));
+      
+return false;
       await processChallengers(eligibleChallengers);
 
       // skip += chunkSize;
