@@ -60,7 +60,7 @@ const isBulkReminderDay = () => {
 
 // Helper function to check if reminder is needed for post-Nov challengers
 const needsReminder = (challenger, durationDays) => {
-  const lastUpdate = new Date(challenger.updatedAt);
+  const lastUpdate = new Date(challenger.createdAt);
   const daysSinceUpdate = Math.floor(
     (new Date() - lastUpdate) / (1000 * 60 * 60 * 24)
   );
@@ -189,7 +189,7 @@ const processPostNovemberChallengers = async () => {
     const baseQuery = {
       otpVerified: true,
       pdf: { $exists: true, $ne: null, $ne: "" },
-      updatedAt: { $gte: new Date("2025-11-01") },
+      createdAt: { $gte: new Date("2025-11-01") },
       reminderSent: { $ne: true },
       mobile: {
         $nin:
@@ -355,7 +355,7 @@ const processPostNovemberChallengers = async () => {
         {
           $sort: {
             mobile: 1,
-            updatedAt: -1,
+            createdAt: -1,
           },
         },
         {
@@ -568,17 +568,17 @@ const processPreNovemberChallengers = async () => {
         ]
       },
       // TODO:: to discuss with team
-      updatedAt: { $lt: new Date("2025-11-01") },
+      createdAt: { $gte: new Date("2025-10-24"), $lt: new Date("2025-11-01") },
     };
 
-    while (hasMore) {
+    // while (hasMore) {
       // Paginated aggregation directly at DB level
       const challengers = await Challenger.aggregate([
         { $match: baseQuery },
         {
           $sort: {
             mobile: 1,
-            updatedAt: -1,
+            createdAt: -1,
           },
         },
         {
@@ -588,14 +588,14 @@ const processPreNovemberChallengers = async () => {
           },
         },
         { $replaceRoot: { newRoot: "$doc" } },
-        { $skip: skip },
-        { $limit: chunkSize },
+        // { $skip: skip },
+        { $limit: 5 },
       ]);
 
-      if (!challengers.length) {
-        hasMore = false;
-        break;
-      }
+      // if (!challengers.length) {
+      //   hasMore = false;
+      //   break;
+      // }
 
       const eligibleChallengers = challengers.filter((c) =>
         needsReminder(c, extractDays(c.duration))
@@ -603,9 +603,9 @@ const processPreNovemberChallengers = async () => {
 
       await processChallengers(eligibleChallengers);
 
-      skip += chunkSize;
+      // skip += chunkSize;
       await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+    // }
 
     logger.info("Completed bulk reminder cron for pre-November challengers");
   } catch (error) {
@@ -624,7 +624,7 @@ const startReminderCron = () => {
     async () => {
       try {
         // Process post-November challengers daily
-        await processPostNovemberChallengers();
+        // await processPostNovemberChallengers();
 
         // Process pre-November challengers only on specific dates
         await processPreNovemberChallengers();
