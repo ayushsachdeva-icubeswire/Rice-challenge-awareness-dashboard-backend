@@ -37,6 +37,22 @@ exports.listAdmin = async (req, res) => {
         if (req.query.duration) filter.duration = req.query.duration;
         if (req.query.category) filter.category = req.query.category;
         if (req.query.subcategory) filter.subcategory = req.query.subcategory;
+        if (req.query.utm_url) {
+            const escaped = req.query.utm_url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            filter.referer = { $regex: escaped, $options: "i" };
+        }
+        if (req.query.from && req.query.to) {
+            filter.createdAt = {};
+            
+            if (req.query.from) {
+                // beginning of the day
+                filter.createdAt.$gte = new Date(new Date(req.query.from).setHours(0, 0, 0, 0));
+            }
+            if (req.query.to) {
+                // end of the day
+                filter.createdAt.$lte = new Date(new Date(req.query.to).setHours(23, 59, 59, 999));
+            }
+        }
         const records = await Challenger.find(filter,{name:1,mobile:1,duration:1,category:1,subcategory:1,type:1,pdf:1,createdAt:1})
             .sort({ otpVerified:-1, createdAt: -1})
             .skip(skip)
