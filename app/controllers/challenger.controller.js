@@ -38,8 +38,7 @@ exports.listAdmin = async (req, res) => {
         if (req.query.category) filter.category = req.query.category;
         if (req.query.subcategory) filter.subcategory = req.query.subcategory;
         if (req.query.utm_url) {
-            const escaped = req.query.utm_url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            filter.referer = { $regex: escaped, $options: "i" };
+            filter.referer = req.query.utm_url;
         }
         if (req.query.from && req.query.to) {
             filter.createdAt = {};
