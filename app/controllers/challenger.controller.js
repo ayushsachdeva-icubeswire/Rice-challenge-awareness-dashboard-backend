@@ -637,10 +637,10 @@ exports.getEngagement = async (req, res) => {
 
         const progressData = {
             name: "engagement",
-            previousValue: 134705,
-            currentValue: 134710,
+            previousValue: 155900,
+            currentValue: 155900,
             manualEntries: 0,
-            difference: 5,
+            difference: 0,
         };
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
