@@ -137,28 +137,30 @@ exports.register = async (req, res) => {
 
         let referer = req.headers['referer'] || req.headers['referrer'] || req.headers['x-referer'] || req.headers['x-referrer'] || req.headers['x-forwarded-host'] || req.headers['x-requested-from'] || '';
 
+        let saveTo = new Challenger({ ...body, otp ,ip, referer});
+        let saved = await saveTo.save();
         // Check for existing challenger with the same mobile number
-        let existingChallenger = await Challenger.findOne({
-            mobile: body.mobile,
-            isDeleted: false
-        }).sort({ createdAt: -1 }); // Get the latest one
+        // let existingChallenger = await Challenger.findOne({
+        //     mobile: body.mobile,
+        //     isDeleted: false
+        // }).sort({ createdAt: -1 }); // Get the latest one
 
-        let saved;
-        if (existingChallenger) {
-            // Update existing challenger with new data
-            existingChallenger.name = body.name;
-            existingChallenger.duration = body.duration;
-            existingChallenger.countryCode = body.countryCode;
-            existingChallenger.otp = otp;
-            existingChallenger.ip = ip;
-            existingChallenger.referer = referer;
-            existingChallenger.updatedAt = new Date();
-            saved = await existingChallenger.save();
-        } else {
-            // Create new challenger if no existing one found
-            let saveTo = new Challenger({ ...body, otp, ip, referer });
-            saved = await saveTo.save();
-        }
+        // let saved;
+        // if (existingChallenger) {
+        //     // Update existing challenger with new data
+        //     existingChallenger.name = body.name;
+        //     existingChallenger.duration = body.duration;
+        //     existingChallenger.countryCode = body.countryCode;
+        //     existingChallenger.otp = otp;
+        //     existingChallenger.ip = ip;
+        //     existingChallenger.referer = referer;
+        //     existingChallenger.updatedAt = new Date();
+        //     saved = await existingChallenger.save();
+        // } else {
+        //     // Create new challenger if no existing one found
+        //     let saveTo = new Challenger({ ...body, otp, ip, referer });
+        //     saved = await saveTo.save();
+        // }
 
         let whatsappResp = await sendOTP(body?.mobile, otp, body.countryCode);
         // await fireTrackingPixel(11031, saved?.name, saved?.mobile);
