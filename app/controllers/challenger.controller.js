@@ -14,40 +14,80 @@ exports.listAdmin = async (req, res) => {
         console.log("checking req", req?.query);
         // Build filter object
         let filter = {
-        isDeleted: false,
-            $or: [
+          isDeleted: false,
+          $and: [
+            {
+              $or: [
                 { isDummy: false },
                 { isDummy: null },
-                { isDummy: { $exists: false } }
-            ]
+                { isDummy: { $exists: false } },
+              ],
+            },
+            {
+              $or: [
+                { otpVerified: { $eq: true } },
+                { isPrevious: { $eq: true } },
+              ],
+            },
+          ],
         };
-        if (req?.query?.search){
-            filter = {
-                $and: [
-                filter, // keep previous filter
-                {
-                    $or: [
-                                { name: { $regex: req?.query?.search, $options: "i" } },
-                                { mobile: { $regex: req?.query?.search, $options: "i" } },
-                            ],
-                }
-                ]
-            };
+        const exactCountFilter = {
+          isDeleted: false,
+          $and: [
+            {
+              $or: [
+                { otpVerified: { $eq: true } },
+                { isPrevious: { $eq: true } },
+              ],
+            },
+          ],
+        };
+        // ✅ Add search filter if present
+        if (req?.query?.search) {
+          filter.$and.push({
+            $or: [
+              { name: { $regex: req.query.search, $options: "i" } },
+              { mobile: { $regex: req.query.search, $options: "i" } },
+            ],
+          });
+          exactCountFilter.$and.push({  
+            $or: [
+              { name: { $regex: req.query.search, $options: "i" } },
+              { mobile: { $regex: req.query.search, $options: "i" } },
+            ],
+          });
         }
         if (req.query.duration) filter.duration = req.query.duration;
         if (req.query.category) filter.category = req.query.category;
         if (req.query.subcategory) filter.subcategory = req.query.subcategory;
+        if (req.query.utm_url) {
+            filter.referer = req.query.utm_url;
+            exactCountFilter.referer = req.query.utm_url;
+        }
+        if (req.query.from && req.query.to) {
+            filter.createdAt = {};
+            exactCountFilter.createdAt = {};
+            
+            if (req.query.from) {
+                // beginning of the day
+                filter.createdAt.$gte = new Date(new Date(req.query.from).setHours(0, 0, 0, 0));
+                exactCountFilter.createdAt.$gte = new Date(new Date(req.query.from).setHours(0, 0, 0, 0));
+            }
+            if (req.query.to) {
+                // end of the day
+                filter.createdAt.$lte = new Date(new Date(req.query.to).setHours(23, 59, 59, 999));
+                exactCountFilter.createdAt.$lte = new Date(new Date(req.query.to).setHours(23, 59, 59, 999));
+            }
+        }
         const records = await Challenger.find(filter,{name:1,mobile:1,duration:1,category:1,subcategory:1,type:1,pdf:1,createdAt:1})
             .sort({ otpVerified:-1, createdAt: -1})
             .skip(skip)
             .limit(limit);
 
         const total = await Challenger.countDocuments(filter);
+        const actualCount = await Challenger.countDocuments(exactCountFilter);
         const result = await Challenger.aggregate([
-            { $match: {...filter, $or: [
-                { otpVerified: { $eq: true } },
-                { isPrevious: { $eq: true } }
-            ] }},
+            { $match: filter},
             {
                 $group: {
                     _id: {
@@ -73,6 +113,7 @@ exports.listAdmin = async (req, res) => {
             currentPage: page,
             totalPages: Math.ceil(total / limit),
             totalItems: total,
+            actualCount:actualCount
         });
     } catch (err) {
         console.error("problem in challenger list for admin", err);
@@ -637,10 +678,10 @@ exports.getEngagement = async (req, res) => {
 
         const progressData = {
             name: "engagement",
-            previousValue: 134705,
-            currentValue: 134710,
+            previousValue: 188582,
+            currentValue: 188582,
             manualEntries: 0,
-            difference: 5,
+            difference: 0,
         };
         let challengerCount = await Challenger.countDocuments({
             isDeleted: false,
