@@ -1,10 +1,13 @@
 const db = require("../models");
 const axios = require("axios");
+const crypto = require("crypto");
 const { sendWhatsAppFailureNotification } = require("../services/email.service");
 const logger = require("../config/logger.config");
 const Challenger = db.challengers;
 const Diet = db.dietplan;
 const challangerProgress = db.challengerProgress;
+const WebhookLogs = db.webhookLogs;
+const WEBHOOK_SECRET = process.env.INTERAKT_WEBHOOK_SECRET || "your_interakt_secret";
 
 exports.listAdmin = async (req, res) => {
     try {
@@ -937,4 +940,54 @@ exports.getERValue = async (req, res) => {
             statusCode: 500,
         });
     }
+};
+
+exports.interaktWebhookHandler = async (req, res) => {
+  try {
+    let status, message_id, response_data;
+    if (req.body.data && req.body.data.message) {
+      // New format (like your example)
+      status = req.body.data.message.message_status;
+      message_id = req.body.data.message.id;
+      response_data = req.body.data;
+    } else if (req.body.data) {
+      // Old format
+      status = req.body.data.status;
+      message_id = req.body.data.message_id;
+      response_data = req.body.data;
+    }
+
+    if (!status || !message_id) {
+      console.log("ℹ️ Ignored event: missing status or message_id");
+      return res.status(200).send("Ignored");
+    }
+
+    // 3️⃣ Store unique message status
+    try {
+      await WebhookLogs.updateOne(
+        { message_id, status }, // prevent same status for same message
+        {
+          $setOnInsert: {
+            message_id,
+            status,
+            response_data,
+          },
+        },
+        { upsert: true }
+      );
+
+      console.log(`✅ Stored status "${status}" for message ${message_id}`);
+    } catch (err) {
+      if (err.code === 11000) {
+        console.log(`⏩ Duplicate ignored: ${message_id} - ${status}`);
+      } else {
+        console.error("❌ DB Error:", err);
+      }
+    }
+
+    return res.status(200).send("OK");
+  } catch (err) {
+    console.error("❌ Error processing webhook:", err);
+    return res.status(500).send("Error");
+  }
 };
