@@ -23,6 +23,11 @@ const NotificationLogSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    status: {
+      type: String,
+      required: true,
+      default: "Sent",
+    },
     payload: {
       type: Object,
       required: true,

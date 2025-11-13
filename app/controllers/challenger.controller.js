@@ -7,6 +7,7 @@ const Challenger = db.challengers;
 const Diet = db.dietplan;
 const challangerProgress = db.challengerProgress;
 const WebhookLogs = db.webhookLogs;
+const NotificationLog = db.notificationLog;
 const WEBHOOK_SECRET = process.env.INTERAKT_WEBHOOK_SECRET || "your_interakt_secret";
 
 exports.listAdmin = async (req, res) => {
