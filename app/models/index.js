@@ -13,6 +13,7 @@ db.story = require("./story.model");
 db.challengers = require("./challengers");
 db.challengerProgress = require("./challengeProgress.model");
 db.notificationLog = require("./notificationLog.model");
+db.webhookLogs = require("./webhookLogs.model");
 
 db.ROLES = ["user", "admin", "moderator", "challengers"];
 

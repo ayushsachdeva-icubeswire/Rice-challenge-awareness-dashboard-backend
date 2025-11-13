@@ -20,6 +20,7 @@ const schema = mongoose.model(
         isPrevious: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         reminderSent: { type: Boolean, default: false },
+        isExtended: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
     })
