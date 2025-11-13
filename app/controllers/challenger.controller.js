@@ -945,7 +945,7 @@ exports.getERValue = async (req, res) => {
 
 exports.interaktWebhookHandler = async (req, res) => {
   try {
-    let status, message_id, response_data;
+    let status, message_id, response_data, mobile;
     if (req.body.data && req.body.data.message) {
       // New format (like your example)
       status = req.body.data.message.message_status;
@@ -958,6 +958,9 @@ exports.interaktWebhookHandler = async (req, res) => {
       response_data = req.body.data;
     }
 
+    if(req.body.data && req.body.data.customer){
+        mobile = req.body.data.customer.phone_number;
+    }
     if (!status || !message_id) {
       console.log("ℹ️ Ignored event: missing status or message_id");
       return res.status(200).send("Ignored");
@@ -976,7 +979,17 @@ exports.interaktWebhookHandler = async (req, res) => {
         },
         { upsert: true }
       );
-
+      if(mobile && message_id){
+        await NotificationLog.updateOne(
+            { response_id: message_id,mobile:mobile },
+            {
+              $set: {
+                status,
+                updatedAt: new Date(),
+              },
+            }
+        );
+      }
       console.log(`✅ Stored status "${status}" for message ${message_id}`);
     } catch (err) {
       if (err.code === 11000) {
