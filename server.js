@@ -64,7 +64,7 @@ db.mongoose
     if(process.env.CRON_ENV === 'production'){
       console.log("Starting Reminder Cron Job in production mode.");
       startReminderCron();
-      startDummyCron();
+      // startDummyCron();
     } else {
       console.log("Skipping Reminder Cron Job in non-production mode.");
     }
