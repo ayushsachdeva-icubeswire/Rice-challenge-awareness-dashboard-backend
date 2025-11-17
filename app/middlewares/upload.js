@@ -36,6 +36,18 @@ const imageFilter = (req, file, cb) => {
   }
 };
 
+const excelFilter = (req, file, cb) => {
+  if (
+    file.mimetype ===
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    file.mimetype === 'application/vnd.ms-excel'
+  ) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only Excel files are allowed!'), false);
+  }
+};
+
 // Configure multer for diet plans (PDFs)
 const uploadPdfConfig = multer({
   storage: dietplanStorage,
@@ -54,9 +66,18 @@ const uploadImageConfig = multer({
   }
 });
 
+const uploadExcelConfig = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: excelFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
+
 // Create middleware functions
 const uploadPDF = uploadPdfConfig.single('pdfFile');
 const upload = uploadImageConfig.single('image');
+const uploadExcel = uploadExcelConfig.single('file');
 
 // Error handling middleware
 const handleUploadError = (err, req, res, next) => {
@@ -82,5 +103,6 @@ const handleUploadError = (err, req, res, next) => {
 module.exports = {
   uploadPDF,
   upload,
+  uploadExcel,
   handleUploadError
 };

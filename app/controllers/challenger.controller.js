@@ -1,5 +1,6 @@
 const db = require("../models");
 const axios = require("axios");
+const XLSX = require("xlsx");
 const crypto = require("crypto");
 const { sendWhatsAppFailureNotification } = require("../services/email.service");
 const logger = require("../config/logger.config");
@@ -1003,5 +1004,65 @@ exports.interaktWebhookHandler = async (req, res) => {
   } catch (err) {
     console.error("❌ Error processing webhook:", err);
     return res.status(500).send("Error");
+  }
+};
+
+exports.bulkUpdateChallengers = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        data: null,
+        message: "No file uploaded!",
+        error: "Bad Request",
+        statusCode: 400,
+      });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+    const chunkSize = 100; // You can adjust this for performance
+    let updateCount = 0;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
+            // Prepare bulk operations for this chunk
+            const bulkOps = chunk
+                .filter((row) => row._id)
+                .map((row) => {
+                    const updateFields = {};
+                    if (row.category) updateFields.category = row.category;
+                    if (row.subcategory) updateFields.subcategory = row.subcategory;
+                    if (row.mobile) updateFields.mobile = row.mobile;
+                    if (row.countryCode) updateFields.countryCode = row.countryCode;
+                    if (row.name) updateFields.name = row.name;
+                    updateFields.updatedAt = new Date();
+                    return {
+                        updateOne: {
+                            filter: { _id: row._id, isDeleted: false },
+                            update: { $set: updateFields },
+                        },
+                    };
+                });
+      if (bulkOps.length > 0) {
+        const result = await Challenger.bulkWrite(bulkOps);
+        updateCount += result.modifiedCount || 0;
+      }
+    }
+
+    return res.status(200).json({
+      data: { updatedRecords: updateCount },
+      message: `Bulk update completed! ${updateCount} records updated.`,
+      error: null,
+      statusCode: 200,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      data: null,
+      message: "Server Error!",
+      error: error.message,
+      statusCode: 500,
+    });
   }
 };

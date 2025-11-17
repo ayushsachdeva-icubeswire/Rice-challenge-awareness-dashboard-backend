@@ -1,5 +1,6 @@
 const { authJwt, csrfProtection, provideCsrfToken, verifyRecaptcha, verifyRecaptchaConditional } = require("../middlewares");
 const controller = require("../controllers/challenger.controller");
+const { uploadExcel } = require("../middlewares/upload");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
@@ -214,4 +215,5 @@ module.exports = function (app) {
   app.get("/api/challenger/progress", controller.getEngagement);
   app.get("/api/challenger/v2/progress", controller.getERValue);
   app.post("/api/webhook/interakt", controller.interaktWebhookHandler);
+  app.post("/api/challenger/bulk-update", uploadExcel, controller.bulkUpdateChallengers);
 };
