@@ -140,7 +140,21 @@ exports.register = async (req, res) => {
             '';
 
         let referer = req.headers['referer'] || req.headers['referrer'] || req.headers['x-referer'] || req.headers['x-referrer'] || req.headers['x-forwarded-host'] || req.headers['x-requested-from'] || '';
+        const challengerCount = await Challenger.countDocuments({
+          mobile: body.mobile,
+          isDeleted: false,
+          otpVerified: true,
+        });
 
+        if (challengerCount >= 10) {
+          return res.status(400).json({
+            data: null,
+            message:
+              "You’ve already completed the maximum number of challenges for this mobile number.",
+            error: "Bad Request!",
+            statusCode: 400,
+          });
+        }
         let saveTo = new Challenger({ ...body, otp ,ip, referer});
         let saved = await saveTo.save();
         // Check for existing challenger with the same mobile number
