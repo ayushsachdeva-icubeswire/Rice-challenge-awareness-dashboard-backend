@@ -13,6 +13,7 @@ const schema = mongoose.model(
         type: { type: String, default: "" },
         pdf: { type: String, default: "" },
         otpVerified: { type: Boolean, default: false },
+        isPartOfBulkUpdate: { type: Boolean, default: false },
         isDummy: { type: Boolean, default: false },
         ip: { type: String, default: "" },
         referer: { type: String, default: "" },
@@ -20,6 +21,7 @@ const schema = mongoose.model(
         isPrevious: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         isExtended: { type: Boolean, default: false },
+        bulkUpdateDate: { type: Date },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
     })
