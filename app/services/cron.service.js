@@ -156,6 +156,37 @@ const blockedMobiles = [
   "9314513003",
   "9352603088",
   "9712270299",
+  "8689859762",
+  "8200869073",
+  "9501089664",
+  "8149247130",
+  "9848689801",
+  "8209827012",
+  "6395232243",
+  "7304245416",
+  "9749148389",
+  "8149247130",
+  "8200869073",
+  "9643592636",
+  "7654340486",
+  "8004081260",
+  "8200417341",
+  "9908153457",
+  "9813877802",
+  "8689859762",
+  "9021185177",
+  "9025064983",
+  "9236750224",
+  "9236750224",
+  "7678210978",
+  "9579974139",
+  "9319145775",
+  "9149014230",
+  "8682897166",
+  "9599283484",
+  "1523508958",
+  "9760361460",
+  "8815856147",
 ];
 // image urls to send in the plan
 const imageUrls = {
@@ -187,7 +218,7 @@ const isBulkReminderDay = () => {
   const dayOfMonth = today.getDate();
 
   // Always process on 8th, 15th, and 22nd
-  if ([17, 22].includes(dayOfMonth)) {
+  if ([18, 22].includes(dayOfMonth)) {
     return true;
   }
 
@@ -456,8 +487,8 @@ const processPreNovemberChallengers = async () => {
       },
       // TODO:: to discuss with team
       createdAt: {
-        $gte: new Date("2025-11-01T18:30:00.000Z"),
-        $lte: new Date("2025-11-03T18:29:59.999Z"),
+        $gte: new Date("2025-11-03T18:30:00.000Z"),
+        $lte: new Date("2025-11-04T18:29:59.999Z"),
       },
     };
     const countDocuments = await Challenger.countDocuments(baseQuery);
@@ -507,7 +538,7 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 PM for both types of reminders
   cron.schedule(
-    "07 17 * * *",
+    "22 16 * * *",
     async () => {
       try {
         // Process post-November challengers daily
