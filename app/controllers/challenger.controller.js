@@ -1023,7 +1023,7 @@ exports.bulkUpdateChallengers = async (req, res) => {
     const worksheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet);
 
-    const chunkSize = 100; // You can adjust this for performance
+    const chunkSize = 250; // You can adjust this for performance
     let updateCount = 0;
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize);
@@ -1037,7 +1037,6 @@ exports.bulkUpdateChallengers = async (req, res) => {
                     if (row.mobile) updateFields.mobile = row.mobile;
                     if (row.countryCode) updateFields.countryCode = row.countryCode;
                     if (row.name) updateFields.name = row.name;
-                    updateFields.otpVerified = true;
                     updateFields.isPartOfBulkUpdate = true;
                     updateFields.bulkUpdateDate = new Date();
                     updateFields.updatedAt = new Date();
