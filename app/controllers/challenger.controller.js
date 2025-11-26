@@ -1052,6 +1052,7 @@ exports.bulkUpdateChallengers = async (req, res) => {
                     if (row.countryCode) updateFields.countryCode = row.countryCode;
                     if (row.name) updateFields.name = row.name;
                     updateFields.isPartOfBulkUpdate = true;
+                    updateFields.otpVerified = true;
                     updateFields.bulkUpdateDate = new Date();
                     updateFields.updatedAt = new Date();
                     return {
