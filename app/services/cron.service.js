@@ -201,10 +201,11 @@ const imageUrls = {
 };
 
 const template = {
-  "7 days": "challenge_complete_7days_bk",
-  "14 days": "14_days_complete",
-  "21 days": "challenge_complete_21days",
-  "30 days": "challenge_complete_30days",
+  // allow single string or array of template names per duration
+  "7 days": ["challenge_complete_7days_bk", "challenge_complete_7days_bk1"],
+  "14 days": ["14_days_complete","14_days_complete"],
+  "21 days": ["challenge_complete_21days","challenge_complete_21days"],
+  "30 days": ["challenge_complete_30days","challenge_complete_30days"],
 };
 // Helper function to extract number of days from duration string
 const extractDays = (duration) => {
@@ -254,12 +255,20 @@ const sendPlan = (challenger, url) => {
   return new Promise(async (resolve, reject) => {
     const { mobile, name, duration, countryCode } = challenger;
     try {
+      // Support single template name or an array of template names per duration.
+      const templateForDuration = template[duration] || template["7 days"];
+      const templateName = Array.isArray(templateForDuration)
+        ? templateForDuration[
+            Math.floor(Math.random() * templateForDuration.length)
+          ]
+        : templateForDuration;
+
       const payload = {
         countryCode: countryCode,
         phoneNumber: mobile,
         type: "Template",
         template: {
-          name: template[duration] || template["7 days"],
+          name: templateName,
           languageCode: "en",
           headerValues: [url],
           bodyValues: [name],
