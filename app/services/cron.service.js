@@ -187,6 +187,12 @@ const blockedMobiles = [
   "1523508958",
   "9760361460",
   "8815856147",
+  "6001271396",
+  "9239452435",
+  "7739370718",
+  "9929699903",
+  "9006735721",
+  "9641574469",
 ];
 // image urls to send in the plan
 const imageUrls = {
@@ -202,10 +208,10 @@ const imageUrls = {
 
 const template = {
   // allow single string or array of template names per duration
-  "7 days": ["challenge_complete_7days_bk", "challenge_complete_7days_bk1"],
-  "14 days": ["14_days_complete","14_days_complete"],
-  "21 days": ["challenge_complete_21days","challenge_complete_21days"],
-  "30 days": ["challenge_complete_30days","challenge_complete_30days"],
+  "7 days": ["chlng_comp_7_zepto_10", "chlng_comp_7_zepto_15"],
+  "14 days": ["chlng_comp_14_zepto_10", "challenge_complete_14days_zepto_15"],
+  "21 days": ["chlng_comp_21_zepto_10", "chlng_comp_21_zepto_15"],
+  "30 days": ["challenge_complete_30days", "challenge_complete_30days"],
 };
 // Helper function to extract number of days from duration string
 const extractDays = (duration) => {
@@ -219,7 +225,7 @@ const isBulkReminderDay = () => {
   const dayOfMonth = today.getDate();
 
   // Always process on 8th, 15th, and 22nd
-  if ([20, 22].includes(dayOfMonth)) {
+  if ([26].includes(dayOfMonth)) {
     return true;
   }
 
@@ -487,7 +493,7 @@ const processPreNovemberChallengers = async () => {
       otpVerified: true,
       // pdf: { $exists: true, $ne: null, $ne: "" },
       reminderSent: { $ne: true },
-      duration: "14 days", // Only 7-day challengers
+      duration: "21 days", // Only 7-day challengers
       mobile: {
         $nin: blockedMobiles,
       },
@@ -499,8 +505,8 @@ const processPreNovemberChallengers = async () => {
       },
       // TODO:: to discuss with team
       createdAt: {
-        $gte: new Date("2025-11-05T18:30:00.000Z"),
-        $lte: new Date("2025-11-06T18:29:59.999Z"),
+        $gte: new Date("2025-10-23T18:30:00.000Z"),
+        $lte: new Date("2025-11-05T18:29:59.999Z"),
       },
     };
     const countDocuments = await Challenger.countDocuments(baseQuery);
@@ -550,7 +556,7 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 PM for both types of reminders
   cron.schedule(
-    "32 17 * * *",
+    "07 18 * * *",
     async () => {
       try {
         // Process post-November challengers daily
