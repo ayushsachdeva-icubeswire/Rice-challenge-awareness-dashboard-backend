@@ -3,6 +3,7 @@ const axios = require("axios");
 const db = require("../models");
 const Challenger = db.challengers;
 const NotificationLog = db.notificationLog;
+const logger = require("../config/logger.config");
 // not allowed mobiles
 const blockedMobiles = [
   "9029616245",
@@ -216,11 +217,6 @@ const template = {
   "21 days": ["chlng_comp_21_zepto_10", "chlng_comp_21_zepto_15"],
   "30 days": ["30days_chlng_comp_15", "30days_chlng_comp_10"],
 };
-// Helper function to extract number of days from duration string
-const extractDays = (duration) => {
-  const match = duration.match(/(\d+)/);
-  return match ? parseInt(match[0]) : 0;
-};
 
 const sendPlan = (challenger, url) => {
   return new Promise(async (resolve, reject) => {
@@ -349,8 +345,6 @@ const processFailedNotifications = async () => {
       retry_count: { $lt: 3 },
       updatedAt: { $gte: start, $lte: end },
     };
-    console.log("baseMatch:", JSON.stringify(baseMatch));
-    return false;
     while (hasMore) {
       const pipeline = [
         { $match: baseMatch },
