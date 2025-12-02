@@ -7,6 +7,7 @@ const cookieSession = require("cookie-session");
 
 const dbConfig = require("./app/config/db.config");
 const {startDummyCron} =require('./app/services/dummy-cron.service.js');
+const {retryNotificationCron} =require('./app/services/retryNotificationCron.service.js');
 
 const app = express();
 
@@ -60,6 +61,7 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     initial();
     // startDummyCron();
+    retryNotificationCron();
   })
   .catch(err => {
     console.error("Connection error", err);

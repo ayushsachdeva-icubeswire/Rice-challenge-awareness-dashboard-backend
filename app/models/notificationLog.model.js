@@ -28,6 +28,11 @@ const NotificationLogSchema = new mongoose.Schema(
       required: true, 
       default: 'Sent'
     },
+    retry_count: {
+      type: Number,
+      required: true,
+      default: 0
+    },
     payload: {
       type: Object,
       required: true,
