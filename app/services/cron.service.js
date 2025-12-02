@@ -388,11 +388,6 @@ const processChallengers = async (challengers) => {
 // Process pre-November challengers (on specific dates)
 const processPreNovemberChallengers = async () => {
   try {
-    if (!isBulkReminderDay()) {
-      logger.info("Not a bulk reminder day, skipping pre-November challengers");
-      return;
-    }
-
     logger.info("Starting bulk reminder cron for pre-November challengers");
 
     const chunkSize = 250; // you can adjust based on memory/performance
@@ -415,8 +410,8 @@ const processPreNovemberChallengers = async () => {
       },
       // TODO:: to discuss with team
       createdAt: {
-        $gte: new Date("2025-10-23T18:30:00.000Z"),
-        $lte: new Date("2025-11-01T18:29:59.999Z"),
+        $gte: new Date("2025-11-01T18:30:00.000Z"),
+        $lte: new Date("2025-11-02T18:29:59.999Z"),
       },
     };
     const countDocuments = await Challenger.countDocuments(baseQuery);
@@ -466,7 +461,7 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 PM for both types of reminders
   cron.schedule(
-    "06 19 * * *",
+    "25 16 * * *",
     async () => {
       try {
         // Process post-November challengers daily
