@@ -25,7 +25,13 @@ const template = {
   "30 days": ["30days_chlng_comp_15", "30days_chlng_comp_10"],
 };
 
-const sendPlan = (challenger, url) => {
+// Helper function to extract number of days from duration string
+const extractDays = (duration) => {
+  const match = duration.match(/(\d+)/);
+  return match ? parseInt(match[0]) : 0;
+};
+
+const sendPlan = (challenger, url, notification_log_id) => {
   return new Promise(async (resolve, reject) => {
     const { mobile, name, duration, countryCode } = challenger;
     try {
@@ -66,7 +72,33 @@ const sendPlan = (challenger, url) => {
           duration,
           responseData: response.data,
         });
-
+        try {
+          await NotificationLog.updateOne(
+            { _id: notification_log_id },
+            {
+              $set: {
+                status: "RetrySent",
+                updatedAt: new Date(),
+                challenger_id: challenger._id,
+                mobile: mobile,
+                country_code: countryCode,
+                duration: duration,
+                duration_actual: extractDays(duration),
+                payload: payload,
+                response_data: response.data,
+                response_id: response.data.id ?? "",
+              },
+              $inc: { retry_count: 1 },
+            }
+          );
+        } catch (logError) {
+          logger.error("Error saving notification log", {
+            error: logError.message,
+            mobile,
+            duration,
+            challengerId: challenger._id,
+          });
+        }
         resolve(response.data); // return API response
       } else {
         logger.error("Failed to send WhatsApp message", {
@@ -93,7 +125,7 @@ const sendPlan = (challenger, url) => {
 const retryNotificationCron = () => {
   // New cron: run every day at 18:30 IST to retry failed notifications from the previous 24h window
   cron.schedule(
-    "00 18 * * *",
+    "40 15 * * *",
     // "*/10 * * * * *",
     async () => {
       try {
@@ -183,19 +215,8 @@ const processFailedNotifications = async () => {
               ...challenger,
               countryCode: challenger.countryCode || "+91",
             },
-            url
-          );
-
-          // mark the notification log as retried and increment retry_count
-          await NotificationLog.updateOne(
-            { _id: doc._id },
-            {
-              $set: {
-                status: "RetrySent",
-                updatedAt: new Date(),
-              },
-              $inc: { retry_count: 1 },
-            }
+            url,
+            doc._id
           );
         } catch (err) {
           logger.error("Error retrying failed notification", {
