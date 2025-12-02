@@ -215,7 +215,7 @@ const template = {
   "7 days": ["chlng_comp_7_zepto_10", "chlng_comp_7_zepto_15"],
   "14 days": ["chlng_comp_14_zepto_10", "challenge_complete_14days_zepto_15"],
   "21 days": ["chlng_comp_21_zepto_10", "chlng_comp_21_zepto_15"],
-  "30 days": ["challenge_complete_30days", "challenge_complete_30days"],
+  "30 days": ["30days_chlng_comp_15", "30days_chlng_comp_10"],
 };
 // Helper function to extract number of days from duration string
 const extractDays = (duration) => {
@@ -229,7 +229,7 @@ const isBulkReminderDay = () => {
   const dayOfMonth = today.getDate();
 
   // Always process on 8th, 15th, and 22nd
-  if ([28].includes(dayOfMonth)) {
+  if ([1].includes(dayOfMonth)) {
     return true;
   }
 
@@ -497,7 +497,7 @@ const processPreNovemberChallengers = async () => {
       otpVerified: true,
       // pdf: { $exists: true, $ne: null, $ne: "" },
       reminderSent: { $ne: true },
-      duration: "21 days", // Only 7-day challengers
+      duration: "30 days", // Only 7-day challengers
       mobile: {
         $nin: blockedMobiles,
       },
@@ -509,8 +509,8 @@ const processPreNovemberChallengers = async () => {
       },
       // TODO:: to discuss with team
       createdAt: {
-        $gte: new Date("2025-11-06T18:30:00.000Z"),
-        $lte: new Date("2025-11-07T18:29:59.999Z"),
+        $gte: new Date("2025-10-23T18:30:00.000Z"),
+        $lte: new Date("2025-11-01T18:29:59.999Z"),
       },
     };
     const countDocuments = await Challenger.countDocuments(baseQuery);
@@ -560,7 +560,7 @@ const processPreNovemberChallengers = async () => {
 const startReminderCron = () => {
   // Run every day at 12:00 PM for both types of reminders
   cron.schedule(
-    "39 16 * * *",
+    "06 19 * * *",
     async () => {
       try {
         // Process post-November challengers daily
