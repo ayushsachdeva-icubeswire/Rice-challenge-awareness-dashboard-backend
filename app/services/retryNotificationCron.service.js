@@ -177,7 +177,7 @@ const processFailedNotifications = async () => {
         try {
           const challenger = doc.result;
 
-          const url = imageUrls[challenger.duration] || imageUrls["7 days"];
+          const url = imageUrls[challenger.duration];
           await sendPlan(
             {
               ...challenger,
