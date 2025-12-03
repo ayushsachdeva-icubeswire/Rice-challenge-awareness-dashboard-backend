@@ -125,7 +125,7 @@ const sendPlan = (challenger, url, notification_log_id) => {
 const retryNotificationCron = () => {
   // New cron: run every day at 18:30 IST to retry failed notifications from the previous 24h window
   cron.schedule(
-    "40 15 * * *",
+    "29 17 * * *",
     // "*/10 * * * * *",
     async () => {
       try {
